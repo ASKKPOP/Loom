@@ -20,3 +20,11 @@ Format:
   - Git committer identity is auto-detected (eklotho) — user should set their own
   - Leaked GitHub token in chat (handled — advised user to revoke and switch to gh auth)
   - Not yet pushed to origin (awaiting auth)
+
+## 2026-04-20 — vmlx-001: bootstrap vmlx Python package skeleton (6 tests passing, ruff+mypy clean)
+- Branch: main
+- Commits this session:
+  - 4fb4b1e feat(vmlx): vmlx-001 bootstrap Python package skeleton
+  - d91b8e2 chore(tasks): mark vmlx-001 in_progress; add local Claude permissions
+  - 934b423 chore(harness): add agent harness per celesteanders/harness best-practices
+  - 56990f7 chore: initial repo scaffolding, PRD, and API registration schema
