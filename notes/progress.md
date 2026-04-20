@@ -28,3 +28,12 @@ Format:
   - d91b8e2 chore(tasks): mark vmlx-001 in_progress; add local Claude permissions
   - 934b423 chore(harness): add agent harness per celesteanders/harness best-practices
   - 56990f7 chore: initial repo scaffolding, PRD, and API registration schema
+
+## 2026-04-20 — vmlx-002: SingleRequestEngine baseline — 5 unit + 3 metal tests passing, real Qwen 0.5B inference on M4
+- Branch: main
+- Commits this session:
+  - ec8fcf8 feat(vmlx): vmlx-002 SingleRequestEngine — baseline MLX inference
+  - 099b52c docs(harness): session note — vmlx-001: bootstrap vmlx Python package skeleton (6 tests passing, ruff+mypy clean)
+  - 4fb4b1e feat(vmlx): vmlx-001 bootstrap Python package skeleton
+  - d91b8e2 chore(tasks): mark vmlx-001 in_progress; add local Claude permissions
+  - 934b423 chore(harness): add agent harness per celesteanders/harness best-practices
