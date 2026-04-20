@@ -32,10 +32,12 @@ if [ -f tasks/tasks.json ]; then
 fi
 
 # vMLX package (only run if installed in the venv)
+# Metal-tagged tests are skipped here (slow, require Apple Silicon GPU).
+# Run them explicitly with:  cd vmlx && ../.venv/bin/python -m pytest -m metal
 if [ -f vmlx/pyproject.toml ] && "$PY" -c "import vmlx" >/dev/null 2>&1; then
   run "ruff vmlx/"    "$PY" -m ruff check vmlx/
   run "mypy vmlx/src/" "$PY" -m mypy vmlx/src/
-  run "pytest vmlx/" bash -c "cd vmlx && '$PY' -m pytest -q"
+  run "pytest vmlx/ (non-metal)" bash -c "cd vmlx && '$PY' -m pytest -q -m 'not metal'"
 fi
 
 # Loom gateway (only run when it actually has code)

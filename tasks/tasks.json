@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-04-20T15:45:00Z",
+  "updated_at": "2026-04-20T16:30:00Z",
   "tasks": [
     {
       "id": "harness-001",
@@ -44,7 +44,7 @@
       "scope": "vmlx",
       "phase": 0,
       "title": "Baseline single-request MLX inference via mlx-lm",
-      "status": "todo",
+      "status": "done",
       "priority": "P0",
       "depends_on": ["vmlx-001"],
       "spec": "Implement vmlx.engine.SingleRequestEngine that loads an MLX model via mlx-lm and runs a single generate() call. This is the reference baseline — no batching, no paged cache, no concurrency. All later scheduler work benchmarks against this.",
@@ -55,8 +55,8 @@
         "No memory leaks across 10 sequential generations"
       ],
       "created_at": "2026-04-20T00:00:00Z",
-      "updated_at": "2026-04-20T00:00:00Z",
-      "notes": null
+      "updated_at": "2026-04-20T16:30:00Z",
+      "notes": "Implemented via mlx_lm.stream_generate. GenerationResult surfaces tokens/sec, peak memory, finish reason. Metal tests verified on M4 Mac Studio: load+generate 50 tokens, 10 sequential gens stay memory-bounded, guard raises before load. Metal tests skipped by default in session-verify (run explicitly with pytest -m metal)."
     },
     {
       "id": "vmlx-003",

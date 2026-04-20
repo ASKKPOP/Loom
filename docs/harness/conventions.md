@@ -51,6 +51,13 @@ Error messages name the failing operation, the input that failed, and (if possib
 
 A passing (1) + (2) is **not** a completed task. Tasks with behavior require (3)–(5) as applicable.
 
+### Metal (Apple Silicon GPU) tests
+Tests that load real MLX models are marked `@pytest.mark.metal`. They are **skipped by default** in `session-verify.sh` because they're slow and require the machine to actually have Apple Silicon. Run them explicitly before committing any change that touches inference code:
+
+```bash
+cd vmlx && ../.venv/bin/python -m pytest -m metal -v
+```
+
 ### Test writing rules
 - One behavior per test. Name: `test_<unit>_<behavior>_<condition>`.
 - No mocking what you can construct (real SQLite > mocked DB).
