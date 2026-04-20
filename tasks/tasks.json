@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-04-20T00:00:00Z",
+  "updated_at": "2026-04-20T15:25:00Z",
   "tasks": [
     {
       "id": "harness-001",
@@ -25,7 +25,7 @@
       "scope": "vmlx",
       "phase": 0,
       "title": "Bootstrap vmlx Python package skeleton",
-      "status": "todo",
+      "status": "in_progress",
       "priority": "P0",
       "depends_on": [],
       "spec": "Create vmlx/ as an installable Python 3.12 package: pyproject.toml with mlx and mlx-lm deps, __init__.py exposing version, a no-op `vmlx.serve` entrypoint, and a smoke test that imports the package and verifies version string. No runtime features yet — just the skeleton the rest of Phase 0 builds on.",
@@ -36,7 +36,7 @@
         "ruff + mypy pass on vmlx/"
       ],
       "created_at": "2026-04-20T00:00:00Z",
-      "updated_at": "2026-04-20T00:00:00Z",
+      "updated_at": "2026-04-20T15:25:00Z",
       "notes": null
     },
     {

@@ -41,6 +41,11 @@ Icon
 *.swo
 *~
 
+# Claude Code local overrides (project settings.json IS committed; local is not)
+.claude/settings.local.json
+.claude/.plan/
+.claude/sessions/
+
 # Loom local data
 *.sqlite
 *.sqlite-journal
