@@ -1,0 +1,22 @@
+# Progress Notes
+
+Running log across sessions. Most recent at the bottom. One block per session.
+
+Format:
+```md
+## YYYY-MM-DD — <task-id>: <short title>
+- What I did: <one line>
+- How I verified: <one line>
+- Surprises / follow-ups: <bullets or "none">
+```
+
+---
+
+## 2026-04-20 — harness-bootstrap: initial scaffolding + PRD + API schema + harness
+- What I did: Created repo scaffolding (vmlx/, loom/, docs/, tasks/, scripts/, notes/). Wrote PRD and API registration schema. Built agent harness per celesteanders/harness best-practices: CLAUDE.md entry point, docs/harness/ (session-protocol, conventions, planner/generator/evaluator roles), tasks/tasks.json with Phase 0 vMLX tasks, scripts/ for session lifecycle.
+- How I verified: Directory structure inspected; tasks.json parses as valid JSON; scripts have expected shebang + bash -n implicit via set -euo pipefail.
+- Surprises / follow-ups:
+  - gh CLI was missing, installed via /opt/homebrew/bin/brew — user needs to add brew to PATH and run `gh auth login` before push
+  - Git committer identity is auto-detected (eklotho) — user should set their own
+  - Leaked GitHub token in chat (handled — advised user to revoke and switch to gh auth)
+  - Not yet pushed to origin (awaiting auth)
