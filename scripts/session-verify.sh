@@ -6,6 +6,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+# Prefer the project venv; fall back to system python3 for tasks.json-only checks.
+if [ -x "$ROOT/.venv/bin/python" ]; then
+  PY="$ROOT/.venv/bin/python"
+else
+  PY="python3"
+fi
+
 fail=0
 
 run() {
@@ -24,26 +31,21 @@ if [ -f tasks/tasks.json ]; then
   run "tasks.json parses" python3 -c "import json; json.load(open('tasks/tasks.json'))"
 fi
 
-# Python packages (only run if they have code + tests)
-if [ -f vmlx/pyproject.toml ]; then
-  run "ruff vmlx/"    python3 -m ruff check vmlx/
-  run "mypy vmlx/"    python3 -m mypy vmlx/
-  if ls vmlx/tests/test_*.py >/dev/null 2>&1; then
-    run "pytest vmlx/" python3 -m pytest vmlx/tests/ -q
-  fi
+# vMLX package (only run if installed in the venv)
+if [ -f vmlx/pyproject.toml ] && "$PY" -c "import vmlx" >/dev/null 2>&1; then
+  run "ruff vmlx/"    "$PY" -m ruff check vmlx/
+  run "mypy vmlx/src/" "$PY" -m mypy vmlx/src/
+  run "pytest vmlx/" bash -c "cd vmlx && '$PY' -m pytest -q"
 fi
 
-if [ -f loom/pyproject.toml ] || [ -d loom/gateway ] && ls loom/gateway/*.py >/dev/null 2>&1; then
-  if [ -f loom/pyproject.toml ]; then
-    run "ruff loom/"     python3 -m ruff check loom/
-    run "mypy loom/"     python3 -m mypy loom/
-  fi
-  if ls loom/**/tests/test_*.py >/dev/null 2>&1; then
-    run "pytest loom/" python3 -m pytest loom/ -q
-  fi
+# Loom gateway (only run when it actually has code)
+if [ -f loom/pyproject.toml ] && "$PY" -c "import loom" >/dev/null 2>&1; then
+  run "ruff loom/"  "$PY" -m ruff check loom/
+  run "mypy loom/"  "$PY" -m mypy loom/
+  run "pytest loom/" "$PY" -m pytest loom/ -q
 fi
 
-# Web
+# Loom web
 if [ -f loom/web/package.json ]; then
   run "tsc loom/web"  bash -c "cd loom/web && pnpm tsc --noEmit"
   run "test loom/web" bash -c "cd loom/web && pnpm test --run"
