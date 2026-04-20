@@ -1,0 +1,74 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.pnpm-store/
+.next/
+.nuxt/
+.turbo/
+*.tsbuildinfo
+
+# Rust / Tauri
+target/
+Cargo.lock
+**/*.rs.bk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Loom local data
+*.sqlite
+*.sqlite-journal
+*.db
+*.db-journal
+storage/data/
+storage/models/
+storage/lance/
+.env
+.env.local
+*.log
+logs/
+
+# Model files (large)
+*.safetensors
+*.gguf
+*.bin
+*.pt
+*.mlx
+
+# Secrets
+secrets/
+*.pem
+*.key
+*.crt
+
+# Test artifacts
+coverage/
+.coverage
+htmlcov/
+*.cover
