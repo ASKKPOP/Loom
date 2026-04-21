@@ -46,3 +46,12 @@ Format:
   - ec8fcf8 feat(vmlx): vmlx-002 SingleRequestEngine — baseline MLX inference
   - 099b52c docs(harness): session note — vmlx-001: bootstrap vmlx Python package skeleton (6 tests passing, ruff+mypy clean)
   - 4fb4b1e feat(vmlx): vmlx-001 bootstrap Python package skeleton
+
+## 2026-04-21 — vmlx-004: OpenAI-compatible /v1/chat/completions (streaming + non-streaming) — openai SDK works unchanged
+- Branch: main
+- Commits this session:
+  - a756424 feat(vmlx): vmlx-004 OpenAI-compatible /v1/chat/completions endpoint
+  - afd8d0c docs(harness): session note — vmlx-003: benchmark harness + ROADMAP + PHILOSOPHY (29 unit, 4 metal passing; first run: 241 tok/s Qwen-0.5B)
+  - 71fa742 feat(vmlx): vmlx-003 benchmark harness + top-level docs
+  - 6761121 docs(harness): session note — vmlx-002: SingleRequestEngine baseline — 5 unit + 3 metal tests passing, real Qwen 0.5B inference on M4
+  - ec8fcf8 feat(vmlx): vmlx-002 SingleRequestEngine — baseline MLX inference
