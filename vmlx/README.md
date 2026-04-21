@@ -25,9 +25,48 @@ python3.12 -m venv ../.venv
 ## Quickstart
 
 ```bash
-# Not yet functional — will serve an MLX model on localhost
-vmlx serve <model-id>
+# Serve a model on localhost:8000 with an OpenAI-compatible API
+vmlx serve mlx-community/Qwen2.5-0.5B-Instruct-4bit
 ```
+
+Then from any OpenAI client — Python SDK, curl, LangChain, LiteLLM, etc.:
+
+```bash
+curl http://127.0.0.1:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "mlx-community/Qwen2.5-0.5B-Instruct-4bit",
+    "messages": [{"role": "user", "content": "Say hi"}],
+    "max_tokens": 50
+  }'
+```
+
+Or with the official `openai` Python SDK:
+
+```python
+from openai import OpenAI
+client = OpenAI(base_url="http://127.0.0.1:8000/v1", api_key="not-needed")
+resp = client.chat.completions.create(
+    model="mlx-community/Qwen2.5-0.5B-Instruct-4bit",
+    messages=[{"role": "user", "content": "Say hi"}],
+)
+print(resp.choices[0].message.content)
+```
+
+Streaming works identically — pass `stream=True`.
+
+## Benchmark
+
+Record a baseline for the current engine:
+
+```bash
+python -m vmlx.benchmarks.run \
+  --engine single \
+  --model mlx-community/Qwen2.5-0.5B-Instruct-4bit \
+  --n 20
+```
+
+Every run appends one line to `vmlx/benchmarks/history.jsonl`.
 
 ## License
 

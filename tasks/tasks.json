@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-04-20T17:00:00Z",
+  "updated_at": "2026-04-21T01:00:00Z",
   "tasks": [
     {
       "id": "harness-001",
@@ -81,7 +81,7 @@
       "scope": "vmlx",
       "phase": 0,
       "title": "OpenAI-compatible /v1/chat/completions endpoint",
-      "status": "todo",
+      "status": "done",
       "priority": "P0",
       "depends_on": ["vmlx-002"],
       "spec": "FastAPI server exposing /v1/chat/completions and /v1/models, wrapping SingleRequestEngine. Supports streaming (SSE) and non-streaming. Matches OpenAI request/response shape exactly so existing OpenAI SDK clients work unchanged.",
@@ -92,8 +92,8 @@
         "/v1/models lists loaded models"
       ],
       "created_at": "2026-04-20T00:00:00Z",
-      "updated_at": "2026-04-20T00:00:00Z",
-      "notes": null
+      "updated_at": "2026-04-21T01:00:00Z",
+      "notes": "FastAPI app at vmlx/api/server.py; ServerEngine Protocol lets tests inject stubs. Engine gained stream_generate() + messages support via apply_chat_template. Added vmlx/__main__.py so `python -m vmlx serve` works. 9 TestClient-based unit tests + 3 openai-SDK metal tests (all pass). Curl smoke verified end-to-end: /health, /v1/models, non-streaming completion, SSE streaming with valid chunks + [DONE]."
     },
     {
       "id": "vmlx-005",

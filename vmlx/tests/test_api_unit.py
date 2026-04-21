@@ -1,0 +1,277 @@
+"""Unit tests for the OpenAI-compatible API using FastAPI's TestClient + a stub engine."""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Iterator
+
+import pytest
+from fastapi.testclient import TestClient
+
+from vmlx.api.server import create_app
+from vmlx.engine import GenerationResult, Message, StreamChunk
+
+
+class StubStreamEngine:
+    """Stub engine supporting the server's ServerEngine protocol."""
+
+    def __init__(
+        self,
+        model_id: str = "stub/chat",
+        *,
+        chunks: list[str] | None = None,
+        finish_reason: str = "stop",
+    ) -> None:
+        self._model_id = model_id
+        self._chunks = chunks or ["Hello", ", ", "world", "!"]
+        self._finish_reason = finish_reason
+        self.last_messages: list[Message] | str | None = None
+        self.last_max_tokens: int | None = None
+
+    @property
+    def model_id(self) -> str:
+        return self._model_id
+
+    def generate(
+        self, prompt: str, *, max_tokens: int = 50
+    ) -> GenerationResult:
+        self.last_messages = prompt
+        self.last_max_tokens = max_tokens
+        text = "".join(self._chunks)
+        return GenerationResult(
+            text=text,
+            prompt_tokens=5,
+            generation_tokens=len(self._chunks),
+            tokens_per_second=10.0,
+            ttft_ms=50.0,
+            peak_memory_mb=100.0,
+            duration_s=0.5,
+            finish_reason=self._finish_reason,
+        )
+
+    def stream_generate(
+        self,
+        messages: list[Message] | str,
+        *,
+        max_tokens: int = 50,
+    ) -> Iterator[StreamChunk]:
+        self.last_messages = messages
+        self.last_max_tokens = max_tokens
+        for c in self._chunks:
+            yield StreamChunk(text=c, is_final=False, finish_reason=None)
+        yield StreamChunk(
+            text="",
+            is_final=True,
+            prompt_tokens=5,
+            generation_tokens=len(self._chunks),
+            tokens_per_second=10.0,
+            peak_memory_mb=100.0,
+            finish_reason=self._finish_reason,
+        )
+
+
+@pytest.fixture
+def client() -> Iterator[tuple[TestClient, StubStreamEngine]]:
+    engine = StubStreamEngine()
+    app = create_app(engine)
+    with TestClient(app) as c:
+        yield c, engine
+
+
+# ─── /health + /v1/models ───────────────────────────────────────────
+
+
+def test_health(client: tuple[TestClient, StubStreamEngine]) -> None:
+    c, _ = client
+    r = c.get("/health")
+    assert r.status_code == 200
+    assert r.json()["status"] == "ok"
+
+
+def test_list_models_shows_loaded_model(
+    client: tuple[TestClient, StubStreamEngine],
+) -> None:
+    c, engine = client
+    r = c.get("/v1/models")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["object"] == "list"
+    assert len(body["data"]) == 1
+    assert body["data"][0]["id"] == engine.model_id
+    assert body["data"][0]["object"] == "model"
+
+
+# ─── Non-streaming chat completion ──────────────────────────────────
+
+
+def test_chat_completion_non_streaming_shape(
+    client: tuple[TestClient, StubStreamEngine],
+) -> None:
+    c, _ = client
+    r = c.post(
+        "/v1/chat/completions",
+        json={
+            "model": "stub/chat",
+            "messages": [{"role": "user", "content": "hi"}],
+            "max_tokens": 10,
+            "stream": False,
+        },
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["object"] == "chat.completion"
+    assert body["model"] == "stub/chat"
+    assert body["id"].startswith("chatcmpl-")
+    assert isinstance(body["created"], int)
+    assert len(body["choices"]) == 1
+    choice = body["choices"][0]
+    assert choice["index"] == 0
+    assert choice["message"]["role"] == "assistant"
+    assert choice["message"]["content"] == "Hello, world!"
+    assert choice["finish_reason"] == "stop"
+    assert body["usage"]["prompt_tokens"] == 5
+    assert body["usage"]["completion_tokens"] == 4
+    assert body["usage"]["total_tokens"] == 9
+
+
+def test_chat_completion_passes_messages_to_engine(
+    client: tuple[TestClient, StubStreamEngine],
+) -> None:
+    c, engine = client
+    messages = [
+        {"role": "system", "content": "be brief"},
+        {"role": "user", "content": "hi"},
+    ]
+    r = c.post(
+        "/v1/chat/completions",
+        json={"model": "stub/chat", "messages": messages, "max_tokens": 10},
+    )
+    assert r.status_code == 200
+    assert engine.last_messages == messages
+    assert engine.last_max_tokens == 10
+
+
+def test_chat_completion_rejects_n_not_1(
+    client: tuple[TestClient, StubStreamEngine],
+) -> None:
+    c, _ = client
+    r = c.post(
+        "/v1/chat/completions",
+        json={
+            "model": "stub/chat",
+            "messages": [{"role": "user", "content": "hi"}],
+            "n": 2,
+        },
+    )
+    assert r.status_code == 400
+    assert "n=1" in r.json()["detail"]
+
+
+def test_chat_completion_validates_empty_messages(
+    client: tuple[TestClient, StubStreamEngine],
+) -> None:
+    c, _ = client
+    r = c.post(
+        "/v1/chat/completions",
+        json={"model": "stub/chat", "messages": []},
+    )
+    assert r.status_code == 422  # pydantic validation
+
+
+# ─── Streaming (SSE) chat completion ────────────────────────────────
+
+
+def _parse_sse(body: str) -> list[dict[str, object] | str]:
+    """Parse SSE `data: ...` lines into decoded payloads."""
+    events: list[dict[str, object] | str] = []
+    for raw in body.splitlines():
+        if not raw.startswith("data: "):
+            continue
+        payload = raw[len("data: "):]
+        if payload == "[DONE]":
+            events.append("[DONE]")
+        else:
+            events.append(json.loads(payload))
+    return events
+
+
+def test_chat_completion_streaming_well_formed(
+    client: tuple[TestClient, StubStreamEngine],
+) -> None:
+    c, _ = client
+    with c.stream(
+        "POST",
+        "/v1/chat/completions",
+        json={
+            "model": "stub/chat",
+            "messages": [{"role": "user", "content": "hi"}],
+            "max_tokens": 10,
+            "stream": True,
+        },
+    ) as r:
+        assert r.status_code == 200
+        assert r.headers["content-type"].startswith("text/event-stream")
+        body = b"".join(r.iter_bytes()).decode()
+    events = _parse_sse(body)
+
+    # Must end with [DONE]
+    assert events[-1] == "[DONE]"
+    # At least one opening (role delta), content deltas, and closing.
+    assert len(events) >= 4  # role + >=1 content + closing + [DONE]
+
+    chunk_events = [e for e in events[:-1] if isinstance(e, dict)]
+    # Chunk object field must be chat.completion.chunk on every event.
+    for e in chunk_events:
+        assert e["object"] == "chat.completion.chunk"
+        assert e["model"] == "stub/chat"
+        assert isinstance(e["id"], str)
+        assert len(e["choices"]) == 1
+
+    # First chunk carries role="assistant"
+    first = chunk_events[0]
+    first_delta = first["choices"][0]["delta"]  # type: ignore[index]
+    assert first_delta.get("role") == "assistant"
+
+    # Concatenating content deltas reproduces the full text.
+    content_pieces = []
+    for e in chunk_events[1:-1]:
+        delta = e["choices"][0]["delta"]  # type: ignore[index]
+        if delta.get("content"):
+            content_pieces.append(delta["content"])
+    assert "".join(content_pieces) == "Hello, world!"
+
+    # Last chunk before [DONE] has finish_reason.
+    last = chunk_events[-1]
+    assert last["choices"][0]["finish_reason"] == "stop"  # type: ignore[index]
+
+
+def test_chat_completion_default_max_tokens_applied(
+    client: tuple[TestClient, StubStreamEngine],
+) -> None:
+    """When request omits max_tokens, server uses default_max_tokens."""
+    c, engine = client
+    r = c.post(
+        "/v1/chat/completions",
+        json={
+            "model": "stub/chat",
+            "messages": [{"role": "user", "content": "hi"}],
+        },
+    )
+    assert r.status_code == 200
+    assert engine.last_max_tokens == 512  # default in create_app
+
+
+def test_custom_default_max_tokens(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine = StubStreamEngine()
+    app = create_app(engine, default_max_tokens=7)
+    with TestClient(app) as c:
+        c.post(
+            "/v1/chat/completions",
+            json={
+                "model": "stub/chat",
+                "messages": [{"role": "user", "content": "hi"}],
+            },
+        )
+    assert engine.last_max_tokens == 7

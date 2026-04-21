@@ -7,6 +7,8 @@ import subprocess
 import sys
 import tempfile
 
+import pytest
+
 import vmlx
 from vmlx import cli
 
@@ -47,9 +49,21 @@ def test_cli_version_flag() -> None:
     assert vmlx.__version__ in result.stdout
 
 
-def test_cli_serve_returns_zero() -> None:
-    rc = cli.main(["serve", "some/model"])
+def test_cli_serve_invokes_run_server(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`vmlx serve <model>` wires through to api.server.run_server.
+
+    We don't actually want to bind a socket or load a model here — swap
+    run_server for a spy and assert it's called with the parsed args.
+    """
+    calls: list[tuple[str, str, int]] = []
+
+    def fake_run_server(model: str, *, host: str, port: int) -> None:
+        calls.append((model, host, port))
+
+    monkeypatch.setattr("vmlx.api.server.run_server", fake_run_server)
+    rc = cli.main(["serve", "some/model", "--port", "9999"])
     assert rc == 0
+    assert calls == [("some/model", "127.0.0.1", 9999)]
 
 
 def test_cli_no_args_prints_help() -> None:

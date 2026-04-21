@@ -20,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     serve = subparsers.add_parser(
         "serve",
-        help="Serve an MLX model over HTTP (not yet implemented)",
+        help="Serve an MLX model over an OpenAI-compatible HTTP API.",
     )
     serve.add_argument("model", help="Model id (e.g. mlx-community/...)")
     serve.add_argument("--host", default="127.0.0.1")
@@ -34,14 +34,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "serve":
+        from vmlx.api.server import run_server
+
         print(
             f"vmlx serve: model={args.model} host={args.host} port={args.port}",
             file=sys.stderr,
         )
-        print(
-            "(not yet implemented — serving engine lands in vmlx-004)",
-            file=sys.stderr,
-        )
+        run_server(args.model, host=args.host, port=args.port)
         return 0
 
     parser.print_help()

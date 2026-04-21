@@ -6,6 +6,16 @@ batching, no paged cache. All later scheduler work benchmarks against it.
 
 from __future__ import annotations
 
-from vmlx.engine.single import GenerationResult, SingleRequestEngine
+from vmlx.engine.single import (
+    GenerationResult,
+    Message,
+    SingleRequestEngine,
+    StreamChunk,
+)
 
-__all__ = ["GenerationResult", "SingleRequestEngine"]
+__all__ = [
+    "GenerationResult",
+    "Message",
+    "SingleRequestEngine",
+    "StreamChunk",
+]
