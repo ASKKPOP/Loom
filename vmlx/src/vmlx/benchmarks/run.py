@@ -50,6 +50,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Tokens to generate per request (default: 100).",
     )
     parser.add_argument(
+        "--concurrent",
+        type=int,
+        default=1,
+        help="Number of parallel in-flight requests (default: 1, sequential).",
+    )
+    parser.add_argument(
         "--prompt",
         default=DEFAULT_PROMPT,
         help="Prompt used for every request (default: built-in counting prompt).",
@@ -86,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         print(
             f"vmlx-bench: running engine={args.engine} n={args.n} "
-            f"max_tokens={args.max_tokens}...",
+            f"concurrent={args.concurrent} max_tokens={args.max_tokens}...",
             file=sys.stderr,
         )
         report = run_benchmark(
@@ -95,6 +101,7 @@ def main(argv: list[str] | None = None) -> int:
             n=args.n,
             max_tokens=args.max_tokens,
             prompt=args.prompt,
+            concurrent=args.concurrent,
         )
     finally:
         engine.unload()

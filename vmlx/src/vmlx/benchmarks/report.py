@@ -42,6 +42,7 @@ class BenchmarkReport:
     vmlx_version: str
     python_version: str
     platform: str
+    concurrent: int = 1
     per_request: list[RequestMetrics] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:

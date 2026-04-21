@@ -6,7 +6,9 @@ import platform as platform_mod
 import resource
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
+from typing import Any
 
 from vmlx import __version__ as vmlx_version
 from vmlx.benchmarks.registry import EngineProtocol
@@ -52,34 +54,45 @@ def run_benchmark(
     n: int,
     max_tokens: int = 100,
     prompt: str = DEFAULT_PROMPT,
+    concurrent: int = 1,
 ) -> BenchmarkReport:
     """Run N generate() calls and build a BenchmarkReport.
 
-    `engine` must already be loaded before calling this. `engine_name` is
-    recorded verbatim in the report for historical tracking.
+    ``engine`` must already be loaded before calling this. ``concurrent`` is
+    the number of worker threads calling ``engine.generate`` in parallel —
+    ``concurrent=1`` is the sequential baseline; higher values exercise
+    batching engines.
     """
     if n <= 0:
         raise ValueError(f"n must be positive, got {n!r}")
     if max_tokens <= 0:
         raise ValueError(f"max_tokens must be positive, got {max_tokens!r}")
+    if concurrent <= 0:
+        raise ValueError(f"concurrent must be positive, got {concurrent!r}")
+
+    def _one(i: int) -> tuple[int, Any]:
+        return i, engine.generate(prompt, max_tokens=max_tokens)
 
     per_request: list[RequestMetrics] = []
     total_generation_tokens = 0
     start_wall = time.perf_counter()
-    for i in range(n):
-        r = engine.generate(prompt, max_tokens=max_tokens)
-        per_request.append(
-            RequestMetrics(
-                i=i,
-                ttft_ms=r.ttft_ms,
-                generation_tokens=r.generation_tokens,
-                tokens_per_second=r.tokens_per_second,
-                duration_s=r.duration_s,
-                peak_memory_mb=r.peak_memory_mb,
-                finish_reason=r.finish_reason,
-            )
-        )
-        total_generation_tokens += r.generation_tokens
+
+    if concurrent == 1:
+        for i in range(n):
+            _, r = _one(i)
+            per_request.append(_to_metrics(i, r))
+            total_generation_tokens += r.generation_tokens
+    else:
+        # Launch all N requests on up to `concurrent` worker threads. This is
+        # the honest "how fast can the engine serve N clients simultaneously"
+        # shape — not "thread-per-request" scaled to the moon.
+        with ThreadPoolExecutor(max_workers=concurrent) as ex:
+            futures = [ex.submit(_one, i) for i in range(n)]
+            for fut in as_completed(futures):
+                i, r = fut.result()
+                per_request.append(_to_metrics(i, r))
+                total_generation_tokens += r.generation_tokens
+
     total_duration_s = time.perf_counter() - start_wall
 
     ttfts = [r.ttft_ms for r in per_request]
@@ -102,7 +115,20 @@ def run_benchmark(
         vmlx_version=vmlx_version,
         python_version=platform_mod.python_version(),
         platform=platform_mod.platform(),
-        per_request=per_request,
+        per_request=sorted(per_request, key=lambda m: m.i),
+        concurrent=concurrent,
+    )
+
+
+def _to_metrics(i: int, r: Any) -> RequestMetrics:
+    return RequestMetrics(
+        i=i,
+        ttft_ms=r.ttft_ms,
+        generation_tokens=r.generation_tokens,
+        tokens_per_second=r.tokens_per_second,
+        duration_s=r.duration_s,
+        peak_memory_mb=r.peak_memory_mb,
+        finish_reason=r.finish_reason,
     )
 
 

@@ -37,11 +37,12 @@ class GenerationResult:
 
 @dataclass(frozen=True)
 class StreamChunk:
-    """A single delta from `SingleRequestEngine.stream_generate`.
+    """A single delta from an engine's ``stream_generate``.
 
-    `text` is the incremental piece produced this step; concatenating every
-    chunk's text yields the full output. The final chunk has `is_final=True`
-    and carries the authoritative counters.
+    ``text`` is the incremental piece produced this step; concatenating every
+    non-final chunk's text yields the full output. The final chunk has
+    ``is_final=True`` and carries the authoritative counters (including
+    ``ttft_ms``).
     """
 
     text: str
@@ -49,6 +50,7 @@ class StreamChunk:
     prompt_tokens: int = 0
     generation_tokens: int = 0
     tokens_per_second: float = 0.0
+    ttft_ms: float = 0.0
     peak_memory_mb: float = 0.0
     finish_reason: str | None = None
 
@@ -130,13 +132,12 @@ class SingleRequestEngine:
                 finish_reason="empty",
             )
 
-        ttft_ms = self._first_token_latency_ms
         return GenerationResult(
             text="".join(pieces),
             prompt_tokens=final.prompt_tokens,
             generation_tokens=final.generation_tokens,
             tokens_per_second=final.tokens_per_second,
-            ttft_ms=ttft_ms,
+            ttft_ms=final.ttft_ms,
             peak_memory_mb=final.peak_memory_mb,
             duration_s=duration,
             finish_reason=final.finish_reason,
@@ -236,6 +237,7 @@ class SingleRequestEngine:
                 prompt_tokens=int(last.prompt_tokens),
                 generation_tokens=int(last.generation_tokens),
                 tokens_per_second=float(last.generation_tps),
+                ttft_ms=self._first_token_latency_ms,
                 peak_memory_mb=float(last.peak_memory),
                 finish_reason=last.finish_reason,
             )

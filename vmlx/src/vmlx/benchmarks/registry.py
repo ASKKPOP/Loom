@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Protocol, runtime_checkable
 
-from vmlx.engine import GenerationResult, SingleRequestEngine
+from vmlx.engine import BatchingEngine, GenerationResult, SingleRequestEngine
 
 
 @runtime_checkable
@@ -31,6 +31,7 @@ EngineFactory = Callable[[str], EngineProtocol]
 
 ENGINES: dict[str, EngineFactory] = {
     "single": lambda model_id: SingleRequestEngine(model_id),
+    "batching": lambda model_id: BatchingEngine(model_id),
 }
 
 

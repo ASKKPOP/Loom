@@ -55,15 +55,33 @@ print(resp.choices[0].message.content)
 
 Streaming works identically — pass `stream=True`.
 
+## Engines
+
+| Engine | When to use |
+|---|---|
+| `single` | Baseline reference. One request at a time. Lowest latency per request. |
+| `batching` | Continuous-batched. Many concurrent requests. Massively higher aggregate throughput. Backed by `mlx_lm.BatchGenerator`. |
+
+Both satisfy the same protocol — the API server and benchmark harness work with either.
+
 ## Benchmark
 
-Record a baseline for the current engine:
+Sequential baseline:
 
 ```bash
 python -m vmlx.benchmarks.run \
   --engine single \
   --model mlx-community/Qwen2.5-0.5B-Instruct-4bit \
   --n 20
+```
+
+Concurrent batching:
+
+```bash
+python -m vmlx.benchmarks.run \
+  --engine batching \
+  --model mlx-community/Qwen2.5-0.5B-Instruct-4bit \
+  --n 8 --concurrent 8
 ```
 
 Every run appends one line to `vmlx/benchmarks/history.jsonl`.

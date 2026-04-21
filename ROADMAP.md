@@ -16,8 +16,8 @@ Goal: ship **vMLX 0.1** — a high-throughput MLX serving engine with continuous
 | [vmlx-002](tasks/tasks.json) Baseline SingleRequestEngine | ✅ Done | mlx-lm wrapper; TTFT + peak memory in GenerationResult |
 | [vmlx-003](tasks/tasks.json) Benchmark harness | ✅ Done | `python -m vmlx.benchmarks.run`; ttft p50/p95, tok/s, peak RSS; history.jsonl |
 | [vmlx-004](tasks/tasks.json) OpenAI-compatible API endpoint | ✅ Done | `vmlx serve …`; `/v1/chat/completions` (streaming + non-streaming) + `/v1/models`; `openai` SDK client works unchanged |
-| [vmlx-005](tasks/tasks.json) Continuous batching scheduler | ⏳ Next | Target ≥ 3× throughput at N=8 concurrent vs single-request baseline |
-| [vmlx-006](tasks/tasks.json) Paged KV cache | ⏳ | Block allocator adapted for Apple unified memory |
+| [vmlx-005](tasks/tasks.json) Continuous batching scheduler | ✅ Done | `BatchingEngine` wraps mlx-lm's `BatchGenerator`; measured **4.09×** req/s vs single at N=8 (gate: ≥ 3×); TTFT actually **faster** under load |
+| [vmlx-006](tasks/tasks.json) Paged KV cache | ⏳ Next | Block allocator adapted for Apple unified memory |
 | [vmlx-007](tasks/tasks.json) Prefix caching | ⏳ | Content-addressed prefix reuse across requests |
 | [vmlx-008](tasks/tasks.json) **vMLX 0.1 release** | ⏳ | Tag, benchmarks vs mlx-lm, launch README |
 

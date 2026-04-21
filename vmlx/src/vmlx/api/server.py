@@ -159,7 +159,10 @@ def _streaming_response(
     created = _now()
     model_label = request_model or engine.model_id
 
-    async def event_stream() -> AsyncIterator[bytes]:
+    # Sync generator: Starlette will iterate in a threadpool, so blocking
+    # engines (e.g. BatchingEngine waiting on a queue) do not stall the
+    # event loop.
+    def event_stream() -> Iterator[bytes]:
         # Opening chunk: assistant role.
         opening = ChatCompletionChunk(
             id=response_id,

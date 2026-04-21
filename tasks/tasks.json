@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-04-21T01:00:00Z",
+  "updated_at": "2026-04-21T02:00:00Z",
   "tasks": [
     {
       "id": "harness-001",
@@ -100,7 +100,7 @@
       "scope": "vmlx",
       "phase": 0,
       "title": "Continuous batching scheduler (basic)",
-      "status": "todo",
+      "status": "done",
       "priority": "P0",
       "depends_on": ["vmlx-003", "vmlx-004"],
       "spec": "Replace SingleRequestEngine with BatchingEngine that merges in-flight requests each step. Start with naive per-step batching (no paged KV yet). Target: 3x throughput on 8 concurrent requests vs SingleRequestEngine.",
@@ -111,8 +111,8 @@
         "Stress test: 100 requests over 30 seconds, no deadlocks, no dropped requests"
       ],
       "created_at": "2026-04-20T00:00:00Z",
-      "updated_at": "2026-04-20T00:00:00Z",
-      "notes": null
+      "updated_at": "2026-04-21T02:00:00Z",
+      "notes": "BatchingEngine uses mlx_lm.generate.BatchGenerator (native continuous batching primitive). Scheduler thread owns BatchGenerator; per-request queue.Queue for token delivery; NaiveStreamingDetokenizer per request. Server's event_stream converted to sync generator (Starlette threadpools it) so blocking engines don't stall the event loop. ttft_ms added to StreamChunk (final) so both engines carry it. Results on M4 Mac Studio, Qwen 0.5B 4-bit, 8 concurrent x 30 max_tokens: throughput 36.5 req/s (vs single 8.9 req/s) = 4.09x, median TTFT 37.6ms (vs 58.1ms single) = 0.65x (actually faster), 100-req stress completes in 1.5s, greedy-sampling output byte-identical across 8 concurrent + single baseline. 9 new unit tests + 5 new metal tests."
     },
     {
       "id": "vmlx-006",
