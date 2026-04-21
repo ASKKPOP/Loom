@@ -55,3 +55,12 @@ Format:
   - 71fa742 feat(vmlx): vmlx-003 benchmark harness + top-level docs
   - 6761121 docs(harness): session note — vmlx-002: SingleRequestEngine baseline — 5 unit + 3 metal tests passing, real Qwen 0.5B inference on M4
   - ec8fcf8 feat(vmlx): vmlx-002 SingleRequestEngine — baseline MLX inference
+
+## 2026-04-21 — vmlx-005: continuous batching — 4.09× throughput at N=8, faster TTFT under load, 100-req stress in 1.5s
+- Branch: main
+- Commits this session:
+  - 2b5f0c9 feat(vmlx): vmlx-005 continuous batching scheduler (BatchingEngine)
+  - 4995533 docs(harness): session note — vmlx-004: OpenAI-compatible /v1/chat/completions (streaming + non-streaming) — openai SDK works unchanged
+  - a756424 feat(vmlx): vmlx-004 OpenAI-compatible /v1/chat/completions endpoint
+  - afd8d0c docs(harness): session note — vmlx-003: benchmark harness + ROADMAP + PHILOSOPHY (29 unit, 4 metal passing; first run: 241 tok/s Qwen-0.5B)
+  - 71fa742 feat(vmlx): vmlx-003 benchmark harness + top-level docs
