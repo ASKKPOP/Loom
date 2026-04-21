@@ -37,6 +37,7 @@ def test_load_and_generate_50_tokens(engine: SingleRequestEngine) -> None:
     # Model may stop early via EOS; accept anything in [1, 50].
     assert 1 <= result.generation_tokens <= 50
     assert result.tokens_per_second > 0.0
+    assert result.ttft_ms > 0.0
     assert result.peak_memory_mb > 0.0
     assert result.duration_s > 0.0
 

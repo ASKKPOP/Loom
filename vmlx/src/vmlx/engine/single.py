@@ -25,6 +25,7 @@ class GenerationResult:
     prompt_tokens: int
     generation_tokens: int
     tokens_per_second: float
+    ttft_ms: float
     peak_memory_mb: float
     duration_s: float
     finish_reason: str | None
@@ -97,6 +98,7 @@ class SingleRequestEngine:
 
         pieces: list[str] = []
         last: Any = None
+        ttft_ms = 0.0
         start = time.perf_counter()
         for response in stream_generate(
             self._model,
@@ -105,6 +107,8 @@ class SingleRequestEngine:
             max_tokens=max_tokens,
             **sampler_kwargs,
         ):
+            if last is None:
+                ttft_ms = (time.perf_counter() - start) * 1000.0
             pieces.append(response.text)
             last = response
         duration = time.perf_counter() - start
@@ -115,6 +119,7 @@ class SingleRequestEngine:
                 prompt_tokens=0,
                 generation_tokens=0,
                 tokens_per_second=0.0,
+                ttft_ms=0.0,
                 peak_memory_mb=0.0,
                 duration_s=duration,
                 finish_reason="empty",
@@ -125,6 +130,7 @@ class SingleRequestEngine:
             prompt_tokens=int(last.prompt_tokens),
             generation_tokens=int(last.generation_tokens),
             tokens_per_second=float(last.generation_tps),
+            ttft_ms=ttft_ms,
             peak_memory_mb=float(last.peak_memory),
             duration_s=duration,
             finish_reason=last.finish_reason,

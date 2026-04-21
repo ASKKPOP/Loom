@@ -48,6 +48,7 @@ def test_generation_result_is_frozen() -> None:
         prompt_tokens=1,
         generation_tokens=1,
         tokens_per_second=10.0,
+        ttft_ms=50.0,
         peak_memory_mb=100.0,
         duration_s=0.1,
         finish_reason="stop",

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-04-20T16:30:00Z",
+  "updated_at": "2026-04-20T17:00:00Z",
   "tasks": [
     {
       "id": "harness-001",
@@ -63,7 +63,7 @@
       "scope": "vmlx",
       "phase": 0,
       "title": "Benchmark harness comparing engines",
-      "status": "todo",
+      "status": "done",
       "priority": "P0",
       "depends_on": ["vmlx-002"],
       "spec": "Build vmlx/benchmarks/ tool that runs a fixed workload (N prompts, fixed length) against a named engine implementation and reports: median/P95 TTFT, tokens/sec, peak memory. This is the yardstick for every later vMLX improvement.",
@@ -73,8 +73,8 @@
         "Report is appended to vmlx/benchmarks/history.jsonl for tracking over time"
       ],
       "created_at": "2026-04-20T00:00:00Z",
-      "updated_at": "2026-04-20T00:00:00Z",
-      "notes": null
+      "updated_at": "2026-04-20T17:00:00Z",
+      "notes": "vmlx.benchmarks package with report/registry/runner/run CLI. Engine registry pattern makes future engines a one-line addition. Added ttft_ms to GenerationResult. 17 new unit tests (stub engine + percentile math + CLI wiring) + 1 metal integration test. Real smoke run: Qwen 0.5B 4-bit, n=5: 241 tok/s aggregate, 59.9ms p50 TTFT, 95.7ms p95."
     },
     {
       "id": "vmlx-004",

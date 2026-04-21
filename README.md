@@ -204,49 +204,31 @@ Loom/
 
 ## Roadmap
 
-### Phase 0 — vMLX Foundation (Months 1–3)
-- [ ] Continuous batching scheduler
-- [ ] Paged KV cache for Metal
-- [ ] OpenAI API compatibility
-- [ ] Benchmark harness vs mlx-lm server
-- [ ] **Milestone:** vMLX 0.1 public release
+See **[ROADMAP.md](ROADMAP.md)** for the full, living roadmap. Short version:
 
-### Phase 1 — Loom MVP (Months 3–5)
-- [ ] Web chat UI on vMLX
-- [ ] Model download / management
-- [ ] Single-user local deployment
+- **Phase 0 — vMLX Foundation** (current)
+  - ✅ Package skeleton, SingleRequestEngine baseline, benchmark harness (vmlx-001 … vmlx-003)
+  - ⏳ Next: OpenAI-compatible `/v1/chat/completions` (vmlx-004), continuous batching, paged cache, prefix cache, v0.1 release
+- **Phase 1 — Loom MVP** — web chat UI on vMLX, model management, single-user local
+- **Phase 2 — Productization** — desktop app (Tauri), artifacts/projects/memory, Anthropic API compat
+- **Phase 3 — Customer API Integration** ⭐ — the wedge: OpenAPI import, auth adapters, audit log
+- **Phase 4 — Launch** — multi-user, connector marketplace, Loom 1.0 + vMLX 1.0
 
-### Phase 2 — Productization (Months 5–7)
-- [ ] Prefix caching + speculative decoding in vMLX
-- [ ] Anthropic API compatibility
-- [ ] Tauri desktop app
-- [ ] Artifacts, projects, memory
-
-### Phase 3 — Online + Business Integration (Months 7–9)
-- [ ] Web search + URL fetch
-- [ ] MCP layer
-- [ ] **Customer API registration UI** — import OpenAPI/Swagger, auto-generate AI tools
-- [ ] **Auth adapters** — OAuth2, API key, JWT, mTLS for customer APIs
-- [ ] Reference integrations: ALTBioLab, generic REST, generic SQL/ODBC
-
-### Phase 4 — Scale & Launch (Months 10–12)
-- [ ] Multi-user deployment
-- [ ] Audit logs, admin panel
-- [ ] MCP connector marketplace
-- [ ] **Milestone:** Loom 1.0 + vMLX 1.0
-
-See [docs/PRD.md](docs/PRD.md) for full requirements.
+Full requirements: [docs/PRD.md](docs/PRD.md).
 
 ---
 
 ## Design Principles
 
-1. **Meet companies where they are.** Your legacy apps stay. Loom adapts to your APIs, not the other way around.
-2. **Privacy first.** Zero data egress by default. Online features are explicit opt-in.
-3. **Local is the product.** Not "cloud with a local option" — local is the default and the strength.
-4. **Open foundation.** vMLX and Loom core are Apache 2.0. Enterprise connectors are the commercial tier.
-5. **Build on legitimate sources.** Architecture inspired by public papers, open specs (MCP), and OSS (Aider, Continue.dev, OpenHands). No reverse engineering of closed products.
-6. **Respect the Mac.** Native feel, unified memory awareness, Metal-first.
+Full detail in **[PHILOSOPHY.md](PHILOSOPHY.md)**. Short version:
+
+1. **Meet companies where they are** — Loom sits on top of existing systems, never replaces them.
+2. **Local is the product** — privacy, auditability, on-premise operation are the default, not a fallback.
+3. **Open foundation, commercial edge** — vMLX and Loom core are Apache 2.0; enterprise features are the paid tier.
+4. **Build on legitimate sources** — public papers, open specs, OSS. No reverse engineering of closed products.
+5. **Respect the Mac** — MLX-native, unified memory aware, Metal-first.
+6. **Single-agent first; complexity must be earned** — harness and product both start monolithic.
+7. **Full implementations only** — no placeholders, stubs, or `TODO: later` in committed code.
 
 ---
 
