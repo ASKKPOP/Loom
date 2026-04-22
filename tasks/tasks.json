@@ -12,7 +12,7 @@
       "depends_on": [
         "loom-001"
       ],
-      "spec": "Build loom/web as a Vite + React 18 + TypeScript + Tailwind v4 single-page app that talks to the loom-gateway (which proxies to vMLX). Scope: multi-turn chat with SSE streaming; Stop (AbortController) / Regenerate / Edit-user-message; system prompt per conversation; conversation sidebar with create/rename/delete, persisted to localStorage; model picker populated from GET /v1/models with per-conversation selection; settings panel (temperature, max_tokens, top_p); light/dark theme honoring prefers-color-scheme with a manual toggle; live connection status dot polling /health; keyboard shortcuts (⌘N new, ⌘Enter send, Esc stop, ⌘K focus composer); markdown rendering with code-block syntax highlighting (Shiki), per-message copy button; error toasts with retry. Vitest unit tests for the SSE parser, storage adapter, and conversation reducer. tsc --noEmit + eslint clean. Dev server proxies /v1/* to the gateway. Out of scope (deferred): auth, projects, artifacts, memory, tool use, Tauri desktop shell.",
+      "spec": "Build loom/web as a Vite + React 18 + TypeScript + Tailwind v4 single-page app that talks to the loom-gateway (which proxies to vMLX). Scope: multi-turn chat with SSE streaming; Stop (AbortController) / Regenerate / Edit-user-message; system prompt per conversation; conversation sidebar with create/rename/delete, persisted to localStorage; model picker populated from GET /v1/models with per-conversation selection; settings panel (temperature, max_tokens, top_p); light/dark theme honoring prefers-color-scheme with a manual toggle; live connection status dot polling /health; keyboard shortcuts (\u2318N new, \u2318Enter send, Esc stop, \u2318K focus composer); markdown rendering with code-block syntax highlighting (Shiki), per-message copy button; error toasts with retry. Vitest unit tests for the SSE parser, storage adapter, and conversation reducer. tsc --noEmit + eslint clean. Dev server proxies /v1/* to the gateway. Out of scope (deferred): auth, projects, artifacts, memory, tool use, Tauri desktop shell.",
       "acceptance_criteria": [
         "`pnpm install && pnpm dev` starts a Vite dev server on http://localhost:5173",
         "Dev proxy forwards /v1/* to http://127.0.0.1:8080 (loom-gateway)",
@@ -23,7 +23,7 @@
         "Settings panel persists temperature / max_tokens / top_p; values are sent with each request",
         "Light/dark theme follows prefers-color-scheme and can be toggled manually",
         "Connection status dot reflects /health (green when 200, red when unreachable)",
-        "Keyboard shortcuts: ⌘N new convo, ⌘Enter send, Esc stop, ⌘K focus composer",
+        "Keyboard shortcuts: \u2318N new convo, \u2318Enter send, Esc stop, \u2318K focus composer",
         "Markdown renders with Shiki-highlighted code blocks; every message has a Copy button",
         "Error toasts appear on network/API failures with a Retry action where applicable",
         "Vitest suite covers SSE parser, storage adapter, conversation reducer; all green",
@@ -32,7 +32,7 @@
       ],
       "created_at": "2026-04-21T04:00:00Z",
       "updated_at": "2026-04-22T00:58:00Z",
-      "notes": "Shipped as Vite + React 18 + TS + Tailwind v4. All 15 criteria satisfied. Browser smoke test (preview MCP) confirmed ⌘N / ⌘K / ⌘Enter global shortcuts fire with focus outside the composer; connection dot turns red when gateway is unreachable; user messages persist to localStorage across conversations. ⌘Enter was originally only handled inside the composer's keydown — moved to useGlobalShortcuts by exposing submit() on ComposerHandle so ⌘Enter works from anywhere in the window. Added eslint to session-verify.sh (10 checks total) and fixed a missing @eslint/js devDep. Metal/vMLX E2E streaming path tested via sse parser unit tests; live streaming deferred until the user runs vmlx + loom-gateway together."
+      "notes": "Shipped as Vite + React 18 + TS + Tailwind v4. All 15 criteria satisfied. Browser smoke test (preview MCP) confirmed \u2318N / \u2318K / \u2318Enter global shortcuts fire with focus outside the composer; connection dot turns red when gateway is unreachable; user messages persist to localStorage across conversations. \u2318Enter was originally only handled inside the composer's keydown \u2014 moved to useGlobalShortcuts by exposing submit() on ComposerHandle so \u2318Enter works from anywhere in the window. Added eslint to session-verify.sh (10 checks total) and fixed a missing @eslint/js devDep. Metal/vMLX E2E streaming path tested via sse parser unit tests; live streaming deferred until the user runs vmlx + loom-gateway together."
     },
     {
       "id": "harness-001",
@@ -50,7 +50,7 @@
       ],
       "created_at": "2026-04-20T00:00:00Z",
       "updated_at": "2026-04-21T03:30:00Z",
-      "notes": "CI workflow at .github/workflows/ci.yml runs on macos-15 (arm64 — mlx requires Apple Silicon) and invokes bash scripts/session-verify.sh directly, so local == CI. session-verify.sh hardened: added `ran` counter (fails if zero checks execute) and require_importable() guard that fails loudly if pyproject.toml exists but the package isn't installed (prevents silent passes when venv is broken). Pip caching keyed on pyproject.toml hashes. Concurrency group cancels superseded runs."
+      "notes": "CI workflow at .github/workflows/ci.yml runs on macos-15 (arm64 \u2014 mlx requires Apple Silicon) and invokes bash scripts/session-verify.sh directly, so local == CI. session-verify.sh hardened: added `ran` counter (fails if zero checks execute) and require_importable() guard that fails loudly if pyproject.toml exists but the package isn't installed (prevents silent passes when venv is broken). Pip caching keyed on pyproject.toml hashes. Concurrency group cancels superseded runs."
     },
     {
       "id": "vmlx-001",
@@ -60,7 +60,7 @@
       "status": "done",
       "priority": "P0",
       "depends_on": [],
-      "spec": "Create vmlx/ as an installable Python 3.12 package: pyproject.toml with mlx and mlx-lm deps, __init__.py exposing version, a no-op `vmlx.serve` entrypoint, and a smoke test that imports the package and verifies version string. No runtime features yet — just the skeleton the rest of Phase 0 builds on.",
+      "spec": "Create vmlx/ as an installable Python 3.12 package: pyproject.toml with mlx and mlx-lm deps, __init__.py exposing version, a no-op `vmlx.serve` entrypoint, and a smoke test that imports the package and verifies version string. No runtime features yet \u2014 just the skeleton the rest of Phase 0 builds on.",
       "acceptance_criteria": [
         "`pip install -e vmlx/` succeeds on macOS arm64 with Python 3.12",
         "`python -c \"import vmlx; print(vmlx.__version__)\"` prints a valid semver string",
@@ -81,7 +81,7 @@
       "depends_on": [
         "vmlx-001"
       ],
-      "spec": "Implement vmlx.engine.SingleRequestEngine that loads an MLX model via mlx-lm and runs a single generate() call. This is the reference baseline — no batching, no paged cache, no concurrency. All later scheduler work benchmarks against this.",
+      "spec": "Implement vmlx.engine.SingleRequestEngine that loads an MLX model via mlx-lm and runs a single generate() call. This is the reference baseline \u2014 no batching, no paged cache, no concurrency. All later scheduler work benchmarks against this.",
       "acceptance_criteria": [
         "Can load a small MLX model (e.g. mlx-community/Qwen2.5-0.5B-Instruct-4bit) and generate 50 tokens from a prompt",
         "Returns tokens/sec measurement",
@@ -174,7 +174,7 @@
       ],
       "created_at": "2026-04-20T00:00:00Z",
       "updated_at": "2026-04-22T01:30:00Z",
-      "notes": "Shipped. PagedKVCacheManager in vmlx/src/vmlx/cache/paged.py — block-paged KV for Apple unified memory. 26 unit tests, 3 metal-tagged byte-identical SDPA correctness tests (prefill, incremental decode, cross-sequence isolation). Utilization benchmark (vmlx.benchmarks.paged_cache) shows >0.85 on mixed/chat/long-ctx workloads at B=16, 29-54% savings vs padded baseline. Design doc at docs/vmlx/paged-cache.md. Not yet wired into BatchingEngine — production path still delegates to mlx_lm.BatchGenerator (so vmlx-005 throughput/correctness untouched); integration is a follow-up task."
+      "notes": "Shipped. PagedKVCacheManager in vmlx/src/vmlx/cache/paged.py \u2014 block-paged KV for Apple unified memory. 26 unit tests, 3 metal-tagged byte-identical SDPA correctness tests (prefill, incremental decode, cross-sequence isolation). Utilization benchmark (vmlx.benchmarks.paged_cache) shows >0.85 on mixed/chat/long-ctx workloads at B=16, 29-54% savings vs padded baseline. Design doc at docs/vmlx/paged-cache.md. Not yet wired into BatchingEngine \u2014 production path still delegates to mlx_lm.BatchGenerator (so vmlx-005 throughput/correctness untouched); integration is a follow-up task."
     },
     {
       "id": "vmlx-007",
@@ -194,7 +194,7 @@
       ],
       "created_at": "2026-04-20T00:00:00Z",
       "updated_at": "2026-04-22T02:30:00Z",
-      "notes": "Shipped. PrefixCache (content-addressed hash-chain + LRU) in vmlx/src/vmlx/cache/prefix.py. Refactored PagedKVCacheManager to shared-per-sequence block tables (fixing an over-allocation bug in vmlx-006; blocks are now num_layers× fewer per sequence) and added refcount + adopt_prefix APIs. Metal benchmark shows 54.5% TTFT reduction on prefix hit at 256-prefix + 1-fresh token (≥50% criterion met). /admin/stats endpoint on vmlx server reports hit_rate, hits, misses, cached_blocks. Tests: 118 unit (from 73) + 18 metal (from 3). Not yet auto-seeded by the engine on request completion — caller-driven for now; engine integration is part of vmlx-008 release work."
+      "notes": "Shipped. PrefixCache (content-addressed hash-chain + LRU) in vmlx/src/vmlx/cache/prefix.py. Refactored PagedKVCacheManager to shared-per-sequence block tables (fixing an over-allocation bug in vmlx-006; blocks are now num_layers\u00d7 fewer per sequence) and added refcount + adopt_prefix APIs. Metal benchmark shows 54.5% TTFT reduction on prefix hit at 256-prefix + 1-fresh token (\u226550% criterion met). /admin/stats endpoint on vmlx server reports hit_rate, hits, misses, cached_blocks. Tests: 118 unit (from 73) + 18 metal (from 3). Not yet auto-seeded by the engine on request completion \u2014 caller-driven for now; engine integration is part of vmlx-008 release work."
     },
     {
       "id": "vmlx-008",
@@ -214,7 +214,7 @@
       ],
       "created_at": "2026-04-20T00:00:00Z",
       "updated_at": "2026-04-22T13:50:00Z",
-      "notes": "Split because: (a) run_server() uses SingleRequestEngine only; BatchingEngine exists but isn't wired, so 'vmlx serve' doesn't actually use continuous batching. (b) mlx-lm 0.31 already has ThreadingHTTPServer + continuous-batching BatchGenerator + LRUPromptCache; the >=3x bar was set against a simpler baseline that no longer exists. (c) PrefixCache is integrated with PagedKVCacheManager but NOT into BatchingEngine's inference path (which delegates to mlx_lm.BatchGenerator with its own KV management) — so exposing PrefixCache stats from a running server would currently report zeros. Honest path: split the work."
+      "notes": "Split because: (a) run_server() uses SingleRequestEngine only; BatchingEngine exists but isn't wired, so 'vmlx serve' doesn't actually use continuous batching. (b) mlx-lm 0.31 already has ThreadingHTTPServer + continuous-batching BatchGenerator + LRUPromptCache; the >=3x bar was set against a simpler baseline that no longer exists. (c) PrefixCache is integrated with PagedKVCacheManager but NOT into BatchingEngine's inference path (which delegates to mlx_lm.BatchGenerator with its own KV management) \u2014 so exposing PrefixCache stats from a running server would currently report zeros. Honest path: split the work."
     },
     {
       "id": "vmlx-008a",
@@ -226,7 +226,7 @@
       "depends_on": [
         "vmlx-005"
       ],
-      "spec": "Extend `vmlx serve` CLI with `--engine {single,batching}` (default batching) and `--max-concurrent N` (default 32). Update run_server() to construct the selected engine. BatchingEngine already satisfies the ServerEngine protocol (same generate/stream_generate shape as SingleRequestEngine), so create_app() requires no changes. PrefixCache is explicitly NOT wired in this task — it is not integrated into the inference path yet (mlx_lm.BatchGenerator owns KV). Keep /admin/stats reporting prefix_cache=null until real integration exists (vmlx-009 or later).",
+      "spec": "Extend `vmlx serve` CLI with `--engine {single,batching}` (default batching) and `--max-concurrent N` (default 32). Update run_server() to construct the selected engine. BatchingEngine already satisfies the ServerEngine protocol (same generate/stream_generate shape as SingleRequestEngine), so create_app() requires no changes. PrefixCache is explicitly NOT wired in this task \u2014 it is not integrated into the inference path yet (mlx_lm.BatchGenerator owns KV). Keep /admin/stats reporting prefix_cache=null until real integration exists (vmlx-009 or later).",
       "acceptance_criteria": [
         "`vmlx serve --help` documents --engine and --max-concurrent",
         "Default engine is `batching` (explicit test asserts this)",
@@ -238,7 +238,7 @@
       ],
       "created_at": "2026-04-22T13:50:00Z",
       "updated_at": "2026-04-22T15:58:00Z",
-      "notes": "Shipped. CLI gained --engine {single,batching} (default batching) and --max-concurrent N (default 32). Refactored run_server() to build the selected engine via a new _build_engine() factory, exposed for tests. ServerEngine protocol extended with load/unload (previously only implicit on concrete engines; the protocol was incomplete — mypy flagged it once run_server returned via the protocol). 7 new non-metal unit tests (4 CLI parser + spy tests, 3 _build_engine factory tests). 1 new metal integration test (2-concurrent-OpenAI-SDK-requests against BatchingEngine-backed server, gated on local Metal hardware). All 10 session-verify checks green: 107 vmlx tests (+7), 11 gateway tests, 24 web vitest tests, ruff/mypy/tsc/eslint all clean. PrefixCache integration into BatchingEngine inference path deferred (mlx_lm.BatchGenerator owns KV) — /admin/stats still reports prefix_cache=null when not attached."
+      "notes": "Shipped. CLI gained --engine {single,batching} (default batching) and --max-concurrent N (default 32). Refactored run_server() to build the selected engine via a new _build_engine() factory, exposed for tests. ServerEngine protocol extended with load/unload (previously only implicit on concrete engines; the protocol was incomplete \u2014 mypy flagged it once run_server returned via the protocol). 7 new non-metal unit tests (4 CLI parser + spy tests, 3 _build_engine factory tests). 1 new metal integration test (2-concurrent-OpenAI-SDK-requests against BatchingEngine-backed server, gated on local Metal hardware). All 10 session-verify checks green: 107 vmlx tests (+7), 11 gateway tests, 24 web vitest tests, ruff/mypy/tsc/eslint all clean. PrefixCache integration into BatchingEngine inference path deferred (mlx_lm.BatchGenerator owns KV) \u2014 /admin/stats still reports prefix_cache=null when not attached."
     },
     {
       "id": "vmlx-008b",
@@ -250,7 +250,7 @@
       "depends_on": [
         "vmlx-008a"
       ],
-      "spec": "Build vmlx/src/vmlx/benchmarks/compare_mlx_lm.py that runs a concurrency sweep (1, 4, 8, 16) against both a running `vmlx serve` and `mlx_lm.server` on the same model, with identical prompts (including large shared system prompts to stress prefix caching). Measures aggregate tokens/sec, TTFT p50/p95, and peak process RSS. Produces docs/vmlx/benchmarks/vs-mlx-lm.md with a reproducible markdown table and the exact commands. The report is HONEST — it shows scenarios where vMLX wins, where it's at parity, and where it loses. Do not gate on any specific ratio.",
+      "spec": "Build vmlx/src/vmlx/benchmarks/compare_mlx_lm.py that runs a concurrency sweep (1, 4, 8, 16) against both a running `vmlx serve` and `mlx_lm.server` on the same model, with identical prompts (including large shared system prompts to stress prefix caching). Measures aggregate tokens/sec, TTFT p50/p95, and peak process RSS. Produces docs/vmlx/benchmarks/vs-mlx-lm.md with a reproducible markdown table and the exact commands. The report is HONEST \u2014 it shows scenarios where vMLX wins, where it's at parity, and where it loses. Do not gate on any specific ratio.",
       "acceptance_criteria": [
         "`python -m vmlx.benchmarks.compare_mlx_lm --model <id> --concurrency 1,4,8,16` produces a markdown table",
         "Script documents: exact model id, concurrency levels, prompt shape (shared prefix length, suffix length, max_tokens), and both server versions",
@@ -260,14 +260,14 @@
       ],
       "created_at": "2026-04-22T13:50:00Z",
       "updated_at": "2026-04-22T23:20:00Z",
-      "notes": "Built compare_mlx_lm.py head-to-head harness + docs/vmlx/benchmarks/vs-mlx-lm.md. Boots both vmlx serve and mlx_lm.server on separate ports, runs shared-prefix workload at concurrency 1/4/8/16 (n=8 each), measures aggregate tok/s, TTFT p50/p95, and peak server RSS via ps sampling. Real-run numbers (Apple M4 Max, Qwen2.5-0.5B-4bit): vMLX wins throughput at every level (1.68x/1.04x/1.76x/1.77x) and TTFT p50 at every level (0.43x/0.50x/0.32x/0.42x). Report is honest — shows parity at c=4 when run-to-run variance lands there, includes caveats on n_per_level cap, model size, and token-count-as-proxy. +29 unit tests (mock request fn for aggregation math, CLI parsing, markdown rendering), +1 metal smoke test (vmlx-only end-to-end with --skip-mlx-lm)."
+      "notes": "Built compare_mlx_lm.py head-to-head harness + docs/vmlx/benchmarks/vs-mlx-lm.md. Boots both vmlx serve and mlx_lm.server on separate ports, runs shared-prefix workload at concurrency 1/4/8/16 (n=8 each), measures aggregate tok/s, TTFT p50/p95, and peak server RSS via ps sampling. Real-run numbers (Apple M4 Max, Qwen2.5-0.5B-4bit): vMLX wins throughput at every level (1.68x/1.04x/1.76x/1.77x) and TTFT p50 at every level (0.43x/0.50x/0.32x/0.42x). Report is honest \u2014 shows parity at c=4 when run-to-run variance lands there, includes caveats on n_per_level cap, model size, and token-count-as-proxy. +29 unit tests (mock request fn for aggregation math, CLI parsing, markdown rendering), +1 metal smoke test (vmlx-only end-to-end with --skip-mlx-lm)."
     },
     {
       "id": "vmlx-008c",
       "scope": "vmlx",
       "phase": 0,
       "title": "vMLX v0.1.0 release (tag + README + release notes)",
-      "status": "todo",
+      "status": "done",
       "priority": "P0",
       "depends_on": [
         "vmlx-008a",
@@ -282,8 +282,8 @@
         "Limitations section explicitly lists what's NOT yet wired (PrefixCache into serving path, PagedKVCacheManager into BatchingEngine)"
       ],
       "created_at": "2026-04-22T13:50:00Z",
-      "updated_at": "2026-04-22T13:50:00Z",
-      "notes": null
+      "updated_at": "2026-04-22T23:50:00Z",
+      "notes": "Version bumped 0.0.1\u21920.1.0. README expanded: install, quickstart, engines, features (batching, paged KV, prefix cache), benchmark summary (1.68\u00d7/1.04\u00d7/1.76\u00d7/1.77\u00d7 tok/s vs mlx-lm), explicit limitations (PrefixCache and PagedKVCacheManager not in serving path, Metal-only, n=1, no tool use). Classifier updated Pre-Alpha\u2192Alpha. Git tag v0.1.0 created. GitHub release at https://github.com/ASKKPOP/Loom/releases/tag/v0.1.0."
     },
     {
       "id": "loom-001",
