@@ -26,9 +26,13 @@ Goal: ship **vMLX 0.1** — a high-throughput MLX serving engine with continuous
 ## Upcoming phases
 
 ### Phase 1 — Loom MVP (Months 3–5)
-- Web chat UI on vMLX
-- Model download / management
-- Single-user local deployment
+
+| Task | Status | Notes |
+|------|--------|-------|
+| [loom-001](tasks/tasks.json) FastAPI gateway scaffold | ✅ Done | `/health`, CORS, JSON logging, proxy `/v1/*` to vMLX; `LOOM_BIND`/`LOOM_VMLX_URL` env config |
+| Web chat UI | ⏳ | React frontend on gateway |
+| Model download / management | ⏳ | |
+| Single-user local deployment | ⏳ | |
 
 ### Phase 2 — Productization (Months 5–7)
 - vMLX: prefix caching refinement, speculative decoding

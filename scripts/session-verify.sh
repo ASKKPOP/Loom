@@ -40,11 +40,11 @@ if [ -f vmlx/pyproject.toml ] && "$PY" -c "import vmlx" >/dev/null 2>&1; then
   run "pytest vmlx/ (non-metal)" bash -c "cd vmlx && '$PY' -m pytest -q -m 'not metal'"
 fi
 
-# Loom gateway (only run when it actually has code)
-if [ -f loom/pyproject.toml ] && "$PY" -c "import loom" >/dev/null 2>&1; then
-  run "ruff loom/"  "$PY" -m ruff check loom/
-  run "mypy loom/"  "$PY" -m mypy loom/
-  run "pytest loom/" "$PY" -m pytest loom/ -q
+# Loom gateway
+if [ -f loom/gateway/pyproject.toml ] && "$PY" -c "import loom.gateway" >/dev/null 2>&1; then
+  run "ruff loom/gateway/" "$PY" -m ruff check loom/gateway/src/ loom/gateway/tests/
+  run "mypy loom/gateway/" "$PY" -m mypy loom/gateway/src/
+  run "pytest loom/gateway/ (unit)" bash -c "cd loom/gateway && '$PY' -m pytest -q"
 fi
 
 # Loom web

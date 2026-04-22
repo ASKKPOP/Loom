@@ -174,7 +174,7 @@
       "scope": "loom",
       "phase": 1,
       "title": "FastAPI gateway scaffold with /health",
-      "status": "todo",
+      "status": "done",
       "priority": "P0",
       "depends_on": ["vmlx-004"],
       "spec": "Create loom/gateway as a FastAPI app: /health, CORS setup, structured logging, local-binding by default (127.0.0.1). Stub forwarding of /v1/chat/completions to the vMLX backend. No auth yet.",
@@ -185,8 +185,8 @@
         "Tests in loom/gateway/tests/"
       ],
       "created_at": "2026-04-20T00:00:00Z",
-      "updated_at": "2026-04-20T00:00:00Z",
-      "notes": null
+      "updated_at": "2026-04-21T03:00:00Z",
+      "notes": "loom/gateway installable Python package (src/ layout). FastAPI app with /health, CORS middleware, JSON structured logging. Async httpx proxy for all /v1/* routes (streaming SSE pass-through + non-streaming). Config via LOOM_BIND (default 127.0.0.1), LOOM_PORT (8080), LOOM_VMLX_URL (http://127.0.0.1:8000), LOOM_LOG_LEVEL. 11 unit tests with respx-mocked backend, all passing. loom-gateway CLI entrypoint. session-verify updated to cover gateway."
     }
   ]
 }

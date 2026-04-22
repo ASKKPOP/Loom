@@ -209,7 +209,9 @@ See **[ROADMAP.md](ROADMAP.md)** for the full, living roadmap. Short version:
 - **Phase 0 — vMLX Foundation** (current)
   - ✅ Package skeleton, SingleRequestEngine, benchmark harness, OpenAI-compatible API, continuous batching (vmlx-001 … vmlx-005) — **4.09× throughput** vs single at 8 concurrent
   - ⏳ Next: paged KV cache (vmlx-006), prefix cache, v0.1 release
-- **Phase 1 — Loom MVP** — web chat UI on vMLX, model management, single-user local
+- **Phase 1 — Loom MVP** (started)
+  - ✅ FastAPI gateway scaffold (loom-001) — `/health`, CORS, JSON logging, `/v1/*` proxy to vMLX
+  - ⏳ Web chat UI, model management, single-user local
 - **Phase 2 — Productization** — desktop app (Tauri), artifacts/projects/memory, Anthropic API compat
 - **Phase 3 — Customer API Integration** ⭐ — the wedge: OpenAPI import, auth adapters, audit log
 - **Phase 4 — Launch** — multi-user, connector marketplace, Loom 1.0 + vMLX 1.0
