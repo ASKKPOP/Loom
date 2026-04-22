@@ -1,7 +1,37 @@
 {
   "version": 1,
-  "updated_at": "2026-04-21T02:00:00Z",
+  "updated_at": "2026-04-21T04:00:00Z",
   "tasks": [
+    {
+      "id": "loom-002",
+      "scope": "loom",
+      "phase": 1,
+      "title": "Web chat UI (Claude-clone-lite) with streaming, history, markdown",
+      "status": "in_progress",
+      "priority": "P0",
+      "depends_on": ["loom-001"],
+      "spec": "Build loom/web as a Vite + React 18 + TypeScript + Tailwind v4 single-page app that talks to the loom-gateway (which proxies to vMLX). Scope: multi-turn chat with SSE streaming; Stop (AbortController) / Regenerate / Edit-user-message; system prompt per conversation; conversation sidebar with create/rename/delete, persisted to localStorage; model picker populated from GET /v1/models with per-conversation selection; settings panel (temperature, max_tokens, top_p); light/dark theme honoring prefers-color-scheme with a manual toggle; live connection status dot polling /health; keyboard shortcuts (⌘N new, ⌘Enter send, Esc stop, ⌘K focus composer); markdown rendering with code-block syntax highlighting (Shiki), per-message copy button; error toasts with retry. Vitest unit tests for the SSE parser, storage adapter, and conversation reducer. tsc --noEmit + eslint clean. Dev server proxies /v1/* to the gateway. Out of scope (deferred): auth, projects, artifacts, memory, tool use, Tauri desktop shell.",
+      "acceptance_criteria": [
+        "`pnpm install && pnpm dev` starts a Vite dev server on http://localhost:5173",
+        "Dev proxy forwards /v1/* to http://127.0.0.1:8080 (loom-gateway)",
+        "End-to-end: with gateway + vMLX running, a user turn streams tokens into the UI and the final message is persisted",
+        "Stop mid-stream aborts the request; Regenerate re-runs the last assistant turn; Edit re-sends from an edited user message",
+        "Sidebar supports new/rename/delete; conversations survive a browser refresh (localStorage)",
+        "Model picker lists models from /v1/models; per-conversation selection persists",
+        "Settings panel persists temperature / max_tokens / top_p; values are sent with each request",
+        "Light/dark theme follows prefers-color-scheme and can be toggled manually",
+        "Connection status dot reflects /health (green when 200, red when unreachable)",
+        "Keyboard shortcuts: ⌘N new convo, ⌘Enter send, Esc stop, ⌘K focus composer",
+        "Markdown renders with Shiki-highlighted code blocks; every message has a Copy button",
+        "Error toasts appear on network/API failures with a Retry action where applicable",
+        "Vitest suite covers SSE parser, storage adapter, conversation reducer; all green",
+        "`pnpm tsc --noEmit` and `pnpm lint` (or eslint) are clean",
+        "session-verify.sh runs the web tsc + test suite when loom/web/package.json exists"
+      ],
+      "created_at": "2026-04-21T04:00:00Z",
+      "updated_at": "2026-04-21T04:00:00Z",
+      "notes": null
+    },
     {
       "id": "harness-001",
       "scope": "harness",
