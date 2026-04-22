@@ -116,3 +116,12 @@ Format:
   - 2288516 feat(vmlx): vmlx-007 prefix caching for shared system prompts
   - 5a60338 docs(harness): session note — vmlx-006: block-paged KV cache for Apple unified memory — 26 unit + 3 metal (byte-identical SDPA) tests, >0.85 utilization @ B=16, 29-54% savings vs padded baseline
   - d3a0e9c feat(vmlx): vmlx-006 block-paged KV cache for Apple unified memory
+
+## 2026-04-22 — vmlx-008b: head-to-head vs mlx-lm benchmark harness — docs/vmlx/benchmarks/vs-mlx-lm.md on Apple M4 Max shows vMLX leads throughput 1.68×/1.04×/1.76×/1.77× at c=1/4/8/16 (+29 unit, +1 metal)
+- Branch: claude/stupefied-fermat-47b474
+- Commits this session:
+  - 65e10ed feat(vmlx): vmlx-008b head-to-head vs mlx-lm benchmark harness
+  - 718cf9a docs(harness): session note — vmlx-008a: BatchingEngine wired into vmlx serve as default (+7 unit, +1 metal) — split vmlx-008 into 008a/b/c for honest benchmark story
+  - 7eb4707 feat(vmlx): vmlx-008a wire BatchingEngine into run_server() as default
+  - 5a8adc7 docs(harness): session note — vmlx-007: prefix caching (54.5% TTFT reduction ≥ 50% criterion), /admin/stats hit-rate endpoint, shared block tables refactor (+45 unit tests, +15 metal)
+  - 2288516 feat(vmlx): vmlx-007 prefix caching for shared system prompts
