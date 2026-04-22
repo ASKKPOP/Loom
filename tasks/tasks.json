@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-04-22T01:30:00Z",
+  "updated_at": "2026-04-22T02:30:00Z",
   "tasks": [
     {
       "id": "loom-002",
@@ -181,7 +181,7 @@
       "scope": "vmlx",
       "phase": 0,
       "title": "Prefix caching for shared system prompts",
-      "status": "todo",
+      "status": "done",
       "priority": "P1",
       "depends_on": [
         "vmlx-006"
@@ -193,8 +193,8 @@
         "No correctness regression"
       ],
       "created_at": "2026-04-20T00:00:00Z",
-      "updated_at": "2026-04-20T00:00:00Z",
-      "notes": null
+      "updated_at": "2026-04-22T02:30:00Z",
+      "notes": "Shipped. PrefixCache (content-addressed hash-chain + LRU) in vmlx/src/vmlx/cache/prefix.py. Refactored PagedKVCacheManager to shared-per-sequence block tables (fixing an over-allocation bug in vmlx-006; blocks are now num_layers\u00d7 fewer per sequence) and added refcount + adopt_prefix APIs. Metal benchmark shows 54.5% TTFT reduction on prefix hit at 256-prefix + 1-fresh token (\u226550% criterion met). /admin/stats endpoint on vmlx server reports hit_rate, hits, misses, cached_blocks. Tests: 118 unit (from 73) + 18 metal (from 3). Not yet auto-seeded by the engine on request completion \u2014 caller-driven for now; engine integration is part of vmlx-008 release work."
     },
     {
       "id": "vmlx-008",

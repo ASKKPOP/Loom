@@ -35,6 +35,7 @@ from vmlx.api.openai_types import (
     ModelList,
     Usage,
 )
+from vmlx.cache import PrefixCache
 from vmlx.engine import GenerationResult, Message, StreamChunk
 
 
@@ -71,10 +72,18 @@ def _messages_from_request(req: ChatCompletionRequest) -> list[Message]:
     return [{"role": m.role, "content": m.content} for m in req.messages]
 
 
-def create_app(engine: ServerEngine, *, default_max_tokens: int = 512) -> FastAPI:
+def create_app(
+    engine: ServerEngine,
+    *,
+    default_max_tokens: int = 512,
+    prefix_cache: PrefixCache | None = None,
+) -> FastAPI:
     """Build the FastAPI app wired to a given engine instance.
 
-    The engine must already be ``load()``-ed by the caller.
+    The engine must already be ``load()``-ed by the caller. ``prefix_cache``
+    is optional — if provided, ``GET /admin/stats`` reports its hit-rate
+    and capacity; otherwise the endpoint reports a null ``prefix_cache``
+    block indicating caching is not attached.
     """
     app = FastAPI(
         title="vMLX",
@@ -89,6 +98,30 @@ def create_app(engine: ServerEngine, *, default_max_tokens: int = 512) -> FastAP
     @app.get("/v1/models", response_model=ModelList)
     async def list_models() -> ModelList:
         return ModelList(data=[ModelCard(id=engine.model_id, created=0)])
+
+    @app.get("/admin/stats")
+    async def admin_stats() -> JSONResponse:
+        """Aggregate server stats. Currently reports PrefixCache hit rate;
+        additional sections (paged cache utilization, queue depth) will
+        plug in here as each subsystem lands."""
+        if prefix_cache is None:
+            prefix_block: dict[str, object] | None = None
+        else:
+            s = prefix_cache.stats()
+            prefix_block = {
+                "lookups": s.lookups,
+                "hits": s.hits,
+                "misses": s.misses,
+                "hit_rate": s.hit_rate,
+                "cached_blocks": s.cached_blocks,
+            }
+        return JSONResponse(
+            {
+                "vmlx_version": vmlx_version,
+                "model": engine.model_id,
+                "prefix_cache": prefix_block,
+            }
+        )
 
     @app.post("/v1/chat/completions", response_model=None)
     async def chat_completions(

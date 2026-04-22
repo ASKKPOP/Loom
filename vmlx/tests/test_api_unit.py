@@ -275,3 +275,66 @@ def test_custom_default_max_tokens(
             },
         )
     assert engine.last_max_tokens == 7
+
+
+# ─── /admin/stats ───────────────────────────────────────────────────
+
+
+def test_admin_stats_without_prefix_cache_reports_null(
+    client: tuple[TestClient, StubStreamEngine],
+) -> None:
+    """When no PrefixCache is wired, the endpoint reports prefix_cache=null
+    so consumers can tell caching isn't attached (vs. hit_rate=0.0 which
+    would be ambiguous with 'attached but cold')."""
+    c, engine = client
+    r = c.get("/admin/stats")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["vmlx_version"]
+    assert body["model"] == engine.model_id
+    assert body["prefix_cache"] is None
+
+
+def test_admin_stats_reports_prefix_cache_hit_rate() -> None:
+    """With a PrefixCache attached, /admin/stats returns real counters
+    that reflect lookups/hits/misses so oncall can watch the hit rate."""
+    from vmlx.cache import PagedCacheConfig, PagedKVCacheManager, PrefixCache
+
+    cfg = PagedCacheConfig(
+        num_blocks=8,
+        num_layers=1,
+        num_kv_heads=1,
+        head_dim=4,
+        block_size=4,
+        dtype="float32",
+    )
+    m = PagedKVCacheManager(cfg)
+    pc = PrefixCache(m)
+
+    # Seed a prefix so we can record a hit.
+    m.open_sequence("seed")
+    import mlx.core as mx
+
+    k = mx.zeros((4, 1, 4), dtype=mx.float32)
+    v = mx.zeros((4, 1, 4), dtype=mx.float32)
+    m.append_kv("seed", layer=0, k=k, v=v)
+    blocks = m.block_table("seed")
+    pc.insert([1, 2, 3, 4], blocks)
+
+    # Exercise the cache: 1 hit, 1 miss.
+    pc.lookup([1, 2, 3, 4])  # hit
+    pc.lookup([9, 9, 9, 9])  # miss
+
+    engine = StubStreamEngine()
+    app = create_app(engine, prefix_cache=pc)
+    with TestClient(app) as c:
+        r = c.get("/admin/stats")
+    assert r.status_code == 200
+    body = r.json()
+    pc_block = body["prefix_cache"]
+    assert pc_block is not None
+    assert pc_block["lookups"] == 2
+    assert pc_block["hits"] == 1
+    assert pc_block["misses"] == 1
+    assert pc_block["hit_rate"] == pytest.approx(0.5)
+    assert pc_block["cached_blocks"] == 1

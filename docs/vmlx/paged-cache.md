@@ -29,16 +29,18 @@ One (K, V) pool **per layer**, each shaped:
 
 Total pool bytes: `2 × num_layers × num_blocks × block_size × num_kv_heads × head_dim × sizeof(dtype)`.
 
-Per-layer per-sequence state:
+Per-sequence state (shared across layers):
 
 ```
-_LayerSlot(
-    blocks: list[int]  # block ids, in logical order
-    length: int        # logical tokens written
+_SeqSlot(
+    blocks: list[int]  # block ids in logical order
+    length: int        # logical tokens written this sequence
 )
 ```
 
-The block table is per-layer — not shared across layers — so layers are fully independent. In practice all layers advance in lockstep during one forward pass (same `T` appended to each), but decoupling them simplifies the API and the test surface.
+One block table per sequence. Every layer's K/V tensor is indexed by the *same* block id at the same position — a block id denotes a slot in every layer's cache, layers just hold different K/V bytes there. This is the vLLM layout and a prerequisite for prefix caching (a cached prefix must be reusable across all layers, not just one).
+
+The lockstep invariant. `append_kv(seq, layer, k, v)` reserves blocks and advances the sequence length only on `layer == 0`; subsequent layers for the same step must be called in order with the same `T` and write into the reserved positions. This keeps all layers aligned without requiring a separate `commit_step` call. See [`paged.py`](../../vmlx/src/vmlx/cache/paged.py) — the manager rejects out-of-order or mismatched-`T` calls with a clear error.
 
 ## Block size
 
@@ -83,12 +85,14 @@ cfg = PagedCacheConfig(
 m = PagedKVCacheManager(cfg)
 
 m.open_sequence("req-42")
-# During forward pass, per layer:
-m.append_kv("req-42", layer=0, k=k_0, v=v_0)  # shape (T, H, D)
-# Later, when running SDPA on this sequence:
+# In each forward pass, call layer 0 first (allocates blocks, advances
+# length), then layers 1..N-1 in order with the same T:
+for layer in range(cfg.num_layers):
+    m.append_kv("req-42", layer, k=k_layer[layer], v=v_layer[layer])
+# Attention at each layer uses gather_kv:
 k_seq, v_seq = m.gather_kv("req-42", layer=0)  # shape (L, H, D)
 # ... run mx.fast.scaled_dot_product_attention(q, k_seq, v_seq, ...)
-m.free_sequence("req-42")  # returns blocks to the pool
+m.free_sequence("req-42")  # releases blocks (refcount-aware)
 ```
 
 `gather_kv` returns fresh arrays (via `mx.take` + `reshape` + slice to logical length), so subsequent appends can't clobber them.
