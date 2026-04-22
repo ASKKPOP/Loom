@@ -7,7 +7,7 @@
       "scope": "harness",
       "phase": 0,
       "title": "Wire session scripts to CI parity",
-      "status": "todo",
+      "status": "done",
       "priority": "P1",
       "depends_on": [],
       "spec": "Ensure session-verify.sh runs the same checks CI will run. Add a GitHub Actions workflow .github/workflows/ci.yml that invokes session-verify.sh so local verification == CI verification.",
@@ -17,8 +17,8 @@
         "Script exits non-zero on any failure; no silent passes"
       ],
       "created_at": "2026-04-20T00:00:00Z",
-      "updated_at": "2026-04-20T00:00:00Z",
-      "notes": null
+      "updated_at": "2026-04-21T03:30:00Z",
+      "notes": "CI workflow at .github/workflows/ci.yml runs on macos-15 (arm64 — mlx requires Apple Silicon) and invokes bash scripts/session-verify.sh directly, so local == CI. session-verify.sh hardened: added `ran` counter (fails if zero checks execute) and require_importable() guard that fails loudly if pyproject.toml exists but the package isn't installed (prevents silent passes when venv is broken). Pip caching keyed on pyproject.toml hashes. Concurrency group cancels superseded runs."
     },
     {
       "id": "vmlx-001",

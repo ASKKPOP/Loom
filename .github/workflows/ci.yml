@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    # mlx is Apple Silicon only, so CI must run on arm64 macOS.
+    # macos-15 is M-series (arm64) — keep parity with the developer's Mac Studio.
+    name: session-verify (macos-15 arm64)
+    runs-on: macos-15
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Show environment
+        run: |
+          uname -a
+          python3.12 --version
+          sysctl -n machdep.cpu.brand_string || true
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/pip
+          key: pip-${{ runner.os }}-${{ runner.arch }}-py3.12-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            pip-${{ runner.os }}-${{ runner.arch }}-py3.12-
+
+      - name: Create venv and install packages
+        # Install into .venv so session-verify.sh picks up the same python
+        # path developers use locally (true local-CI parity).
+        run: |
+          python3.12 -m venv .venv
+          .venv/bin/pip install --upgrade pip wheel
+          .venv/bin/pip install -e 'vmlx/[dev]'
+          .venv/bin/pip install -e 'loom/gateway/[dev]'
+
+      - name: Run session-verify.sh
+        run: bash scripts/session-verify.sh
