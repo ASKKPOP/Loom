@@ -5,6 +5,7 @@
 
 **Target:** Companies that want to add AI to their existing legacy business applications — without rewriting them, without sending data to the cloud, and without vendor lock-in.
 
+[![CI](https://github.com/ASKKPOP/Loom/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ASKKPOP/Loom/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Platform: macOS](https://img.shields.io/badge/Platform-macOS%2015%2B-lightgrey)](https://www.apple.com/macos/)
 [![MLX](https://img.shields.io/badge/Powered%20by-MLX-orange)](https://github.com/ml-explore/mlx)

@@ -45,6 +45,8 @@ Typical setup:
 
 Runs the project's verification suite. **Must pass before you change anything.**
 
+> **CI parity:** `.github/workflows/ci.yml` invokes this exact same script on macos-15 arm64 for every push to `main` and every PR. If verify passes locally and fails on CI (or vice versa), that's a real bug in the script — fix it, don't patch around it.
+
 If it fails on entry: the previous session left broken state. First task of this session becomes *fix the baseline*. Do not pile new work on a broken baseline.
 
 Verification suite (as the project grows):

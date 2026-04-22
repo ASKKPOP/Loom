@@ -64,3 +64,19 @@ Format:
   - a756424 feat(vmlx): vmlx-004 OpenAI-compatible /v1/chat/completions endpoint
   - afd8d0c docs(harness): session note — vmlx-003: benchmark harness + ROADMAP + PHILOSOPHY (29 unit, 4 metal passing; first run: 241 tok/s Qwen-0.5B)
   - 71fa742 feat(vmlx): vmlx-003 benchmark harness + top-level docs
+
+## 2026-04-21 — loom-001: FastAPI gateway scaffold with /health and vMLX proxy
+- What I did: Created loom/gateway as installable Python package (src/ layout). FastAPI app with /health, CORSMiddleware, JSON-line structured logging. Async httpx proxy for all /v1/* routes — SSE streaming pass-through preserved for chat completions. Config from env: LOOM_BIND (127.0.0.1), LOOM_PORT (8080), LOOM_VMLX_URL (http://127.0.0.1:8000), LOOM_LOG_LEVEL. loom-gateway CLI entrypoint. Updated session-verify.sh to cover gateway.
+- How I verified: 11 unit tests pass (respx-mocked backend), ruff + mypy clean on src/ and tests/. Manual: `uvicorn loom.gateway.main:app` starts; /health returns 200.
+- Surprises / follow-ups:
+  - FastAPI needs `response_model=None` on Union-return endpoints — raised FastAPIError otherwise.
+  - TestClient only triggers lifespan when used as a context manager; added `http_client` injection parameter to `create_app()` so tests can bypass the lifespan and supply a mock-transport httpx client directly.
+- Commits this session: ebca530 feat(loom): loom-001 FastAPI gateway scaffold with /health and vMLX proxy
+
+## 2026-04-21 — harness-001: CI parity via GitHub Actions
+- What I did: Added .github/workflows/ci.yml on macos-15 (arm64; mlx is Apple Silicon only) that creates .venv, installs vmlx + loom/gateway with dev extras, then invokes `bash scripts/session-verify.sh` — so the local verify path IS the CI verify path. Hardened session-verify.sh against silent passes: added `ran` counter (fails if zero checks execute) and require_importable() guard that fails loudly if a package's pyproject.toml exists but the package isn't installed.
+- How I verified: First CI run completed green in 1m40s (run 24756610203). All 7 checks executed and reported in the CI log, matching local session-verify output byte-for-byte.
+- Surprises / follow-ups:
+  - macos-15 runners cold-install mlx wheels in ~10s; session-verify itself ran in ~30s; most CI wall time is pip install.
+  - Metal-tagged tests remain skipped in CI — model weight downloads are too heavy. Gated explicitly on local M-series hardware.
+- Commits this session: 7d2ab06 chore(harness): wire session-verify to CI parity (harness-001)
