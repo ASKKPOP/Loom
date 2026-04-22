@@ -7,7 +7,7 @@ package-dir = { "" = "src" }
 
 [project]
 name = "vmlx"
-version = "0.0.1"
+version = "0.1.0"
 description = "High-throughput MLX serving engine for Apple Silicon"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -15,7 +15,7 @@ license = { text = "Apache-2.0" }
 authors = [{ name = "Loom contributors" }]
 keywords = ["mlx", "llm", "inference", "serving", "apple-silicon"]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: MacOS :: MacOS X",
