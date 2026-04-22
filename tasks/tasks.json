@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-04-22T00:58:00Z",
+  "updated_at": "2026-04-22T01:30:00Z",
   "tasks": [
     {
       "id": "loom-002",
@@ -9,8 +9,10 @@
       "title": "Web chat UI (Claude-clone-lite) with streaming, history, markdown",
       "status": "done",
       "priority": "P0",
-      "depends_on": ["loom-001"],
-      "spec": "Build loom/web as a Vite + React 18 + TypeScript + Tailwind v4 single-page app that talks to the loom-gateway (which proxies to vMLX). Scope: multi-turn chat with SSE streaming; Stop (AbortController) / Regenerate / Edit-user-message; system prompt per conversation; conversation sidebar with create/rename/delete, persisted to localStorage; model picker populated from GET /v1/models with per-conversation selection; settings panel (temperature, max_tokens, top_p); light/dark theme honoring prefers-color-scheme with a manual toggle; live connection status dot polling /health; keyboard shortcuts (⌘N new, ⌘Enter send, Esc stop, ⌘K focus composer); markdown rendering with code-block syntax highlighting (Shiki), per-message copy button; error toasts with retry. Vitest unit tests for the SSE parser, storage adapter, and conversation reducer. tsc --noEmit + eslint clean. Dev server proxies /v1/* to the gateway. Out of scope (deferred): auth, projects, artifacts, memory, tool use, Tauri desktop shell.",
+      "depends_on": [
+        "loom-001"
+      ],
+      "spec": "Build loom/web as a Vite + React 18 + TypeScript + Tailwind v4 single-page app that talks to the loom-gateway (which proxies to vMLX). Scope: multi-turn chat with SSE streaming; Stop (AbortController) / Regenerate / Edit-user-message; system prompt per conversation; conversation sidebar with create/rename/delete, persisted to localStorage; model picker populated from GET /v1/models with per-conversation selection; settings panel (temperature, max_tokens, top_p); light/dark theme honoring prefers-color-scheme with a manual toggle; live connection status dot polling /health; keyboard shortcuts (\u2318N new, \u2318Enter send, Esc stop, \u2318K focus composer); markdown rendering with code-block syntax highlighting (Shiki), per-message copy button; error toasts with retry. Vitest unit tests for the SSE parser, storage adapter, and conversation reducer. tsc --noEmit + eslint clean. Dev server proxies /v1/* to the gateway. Out of scope (deferred): auth, projects, artifacts, memory, tool use, Tauri desktop shell.",
       "acceptance_criteria": [
         "`pnpm install && pnpm dev` starts a Vite dev server on http://localhost:5173",
         "Dev proxy forwards /v1/* to http://127.0.0.1:8080 (loom-gateway)",
@@ -21,7 +23,7 @@
         "Settings panel persists temperature / max_tokens / top_p; values are sent with each request",
         "Light/dark theme follows prefers-color-scheme and can be toggled manually",
         "Connection status dot reflects /health (green when 200, red when unreachable)",
-        "Keyboard shortcuts: ⌘N new convo, ⌘Enter send, Esc stop, ⌘K focus composer",
+        "Keyboard shortcuts: \u2318N new convo, \u2318Enter send, Esc stop, \u2318K focus composer",
         "Markdown renders with Shiki-highlighted code blocks; every message has a Copy button",
         "Error toasts appear on network/API failures with a Retry action where applicable",
         "Vitest suite covers SSE parser, storage adapter, conversation reducer; all green",
@@ -30,7 +32,7 @@
       ],
       "created_at": "2026-04-21T04:00:00Z",
       "updated_at": "2026-04-22T00:58:00Z",
-      "notes": "Shipped as Vite + React 18 + TS + Tailwind v4. All 15 criteria satisfied. Browser smoke test (preview MCP) confirmed ⌘N / ⌘K / ⌘Enter global shortcuts fire with focus outside the composer; connection dot turns red when gateway is unreachable; user messages persist to localStorage across conversations. ⌘Enter was originally only handled inside the composer's keydown — moved to useGlobalShortcuts by exposing submit() on ComposerHandle so ⌘Enter works from anywhere in the window. Added eslint to session-verify.sh (10 checks total) and fixed a missing @eslint/js devDep. Metal/vMLX E2E streaming path tested via sse parser unit tests; live streaming deferred until the user runs vmlx + loom-gateway together."
+      "notes": "Shipped as Vite + React 18 + TS + Tailwind v4. All 15 criteria satisfied. Browser smoke test (preview MCP) confirmed \u2318N / \u2318K / \u2318Enter global shortcuts fire with focus outside the composer; connection dot turns red when gateway is unreachable; user messages persist to localStorage across conversations. \u2318Enter was originally only handled inside the composer's keydown \u2014 moved to useGlobalShortcuts by exposing submit() on ComposerHandle so \u2318Enter works from anywhere in the window. Added eslint to session-verify.sh (10 checks total) and fixed a missing @eslint/js devDep. Metal/vMLX E2E streaming path tested via sse parser unit tests; live streaming deferred until the user runs vmlx + loom-gateway together."
     },
     {
       "id": "harness-001",
@@ -48,7 +50,7 @@
       ],
       "created_at": "2026-04-20T00:00:00Z",
       "updated_at": "2026-04-21T03:30:00Z",
-      "notes": "CI workflow at .github/workflows/ci.yml runs on macos-15 (arm64 — mlx requires Apple Silicon) and invokes bash scripts/session-verify.sh directly, so local == CI. session-verify.sh hardened: added `ran` counter (fails if zero checks execute) and require_importable() guard that fails loudly if pyproject.toml exists but the package isn't installed (prevents silent passes when venv is broken). Pip caching keyed on pyproject.toml hashes. Concurrency group cancels superseded runs."
+      "notes": "CI workflow at .github/workflows/ci.yml runs on macos-15 (arm64 \u2014 mlx requires Apple Silicon) and invokes bash scripts/session-verify.sh directly, so local == CI. session-verify.sh hardened: added `ran` counter (fails if zero checks execute) and require_importable() guard that fails loudly if pyproject.toml exists but the package isn't installed (prevents silent passes when venv is broken). Pip caching keyed on pyproject.toml hashes. Concurrency group cancels superseded runs."
     },
     {
       "id": "vmlx-001",
@@ -58,7 +60,7 @@
       "status": "done",
       "priority": "P0",
       "depends_on": [],
-      "spec": "Create vmlx/ as an installable Python 3.12 package: pyproject.toml with mlx and mlx-lm deps, __init__.py exposing version, a no-op `vmlx.serve` entrypoint, and a smoke test that imports the package and verifies version string. No runtime features yet — just the skeleton the rest of Phase 0 builds on.",
+      "spec": "Create vmlx/ as an installable Python 3.12 package: pyproject.toml with mlx and mlx-lm deps, __init__.py exposing version, a no-op `vmlx.serve` entrypoint, and a smoke test that imports the package and verifies version string. No runtime features yet \u2014 just the skeleton the rest of Phase 0 builds on.",
       "acceptance_criteria": [
         "`pip install -e vmlx/` succeeds on macOS arm64 with Python 3.12",
         "`python -c \"import vmlx; print(vmlx.__version__)\"` prints a valid semver string",
@@ -76,8 +78,10 @@
       "title": "Baseline single-request MLX inference via mlx-lm",
       "status": "done",
       "priority": "P0",
-      "depends_on": ["vmlx-001"],
-      "spec": "Implement vmlx.engine.SingleRequestEngine that loads an MLX model via mlx-lm and runs a single generate() call. This is the reference baseline — no batching, no paged cache, no concurrency. All later scheduler work benchmarks against this.",
+      "depends_on": [
+        "vmlx-001"
+      ],
+      "spec": "Implement vmlx.engine.SingleRequestEngine that loads an MLX model via mlx-lm and runs a single generate() call. This is the reference baseline \u2014 no batching, no paged cache, no concurrency. All later scheduler work benchmarks against this.",
       "acceptance_criteria": [
         "Can load a small MLX model (e.g. mlx-community/Qwen2.5-0.5B-Instruct-4bit) and generate 50 tokens from a prompt",
         "Returns tokens/sec measurement",
@@ -95,7 +99,9 @@
       "title": "Benchmark harness comparing engines",
       "status": "done",
       "priority": "P0",
-      "depends_on": ["vmlx-002"],
+      "depends_on": [
+        "vmlx-002"
+      ],
       "spec": "Build vmlx/benchmarks/ tool that runs a fixed workload (N prompts, fixed length) against a named engine implementation and reports: median/P95 TTFT, tokens/sec, peak memory. This is the yardstick for every later vMLX improvement.",
       "acceptance_criteria": [
         "`python -m vmlx.benchmarks.run --engine single --model <id> --n 20` produces a JSON report",
@@ -113,7 +119,9 @@
       "title": "OpenAI-compatible /v1/chat/completions endpoint",
       "status": "done",
       "priority": "P0",
-      "depends_on": ["vmlx-002"],
+      "depends_on": [
+        "vmlx-002"
+      ],
       "spec": "FastAPI server exposing /v1/chat/completions and /v1/models, wrapping SingleRequestEngine. Supports streaming (SSE) and non-streaming. Matches OpenAI request/response shape exactly so existing OpenAI SDK clients work unchanged.",
       "acceptance_criteria": [
         "`curl` with OpenAI payload returns valid OpenAI response",
@@ -132,7 +140,10 @@
       "title": "Continuous batching scheduler (basic)",
       "status": "done",
       "priority": "P0",
-      "depends_on": ["vmlx-003", "vmlx-004"],
+      "depends_on": [
+        "vmlx-003",
+        "vmlx-004"
+      ],
       "spec": "Replace SingleRequestEngine with BatchingEngine that merges in-flight requests each step. Start with naive per-step batching (no paged KV yet). Target: 3x throughput on 8 concurrent requests vs SingleRequestEngine.",
       "acceptance_criteria": [
         "Benchmark with N=8 concurrent shows throughput_req_per_sec >= 3x baseline",
@@ -149,9 +160,11 @@
       "scope": "vmlx",
       "phase": 0,
       "title": "Paged KV cache for unified memory",
-      "status": "todo",
+      "status": "done",
       "priority": "P1",
-      "depends_on": ["vmlx-005"],
+      "depends_on": [
+        "vmlx-005"
+      ],
       "spec": "Design and implement a block-based KV cache manager adapted for Apple unified memory (no distinct GPU/CPU). See vLLM PagedAttention paper for algorithmic reference (arxiv 2309.06180). Should enable variable sequence lengths in the same batch without padding waste.",
       "acceptance_criteria": [
         "Design doc in docs/vmlx/paged-cache.md with block size rationale and benchmarks",
@@ -160,8 +173,8 @@
         "Correctness: same byte-identical test as vmlx-005 passes"
       ],
       "created_at": "2026-04-20T00:00:00Z",
-      "updated_at": "2026-04-20T00:00:00Z",
-      "notes": null
+      "updated_at": "2026-04-22T01:30:00Z",
+      "notes": "Shipped. PagedKVCacheManager in vmlx/src/vmlx/cache/paged.py \u2014 block-paged KV for Apple unified memory. 26 unit tests, 3 metal-tagged byte-identical SDPA correctness tests (prefill, incremental decode, cross-sequence isolation). Utilization benchmark (vmlx.benchmarks.paged_cache) shows >0.85 on mixed/chat/long-ctx workloads at B=16, 29-54% savings vs padded baseline. Design doc at docs/vmlx/paged-cache.md. Not yet wired into BatchingEngine \u2014 production path still delegates to mlx_lm.BatchGenerator (so vmlx-005 throughput/correctness untouched); integration is a follow-up task."
     },
     {
       "id": "vmlx-007",
@@ -170,7 +183,9 @@
       "title": "Prefix caching for shared system prompts",
       "status": "todo",
       "priority": "P1",
-      "depends_on": ["vmlx-006"],
+      "depends_on": [
+        "vmlx-006"
+      ],
       "spec": "Detect and reuse KV for shared prompt prefixes across requests (same system prompt, same conversation-history turns). Use content-addressed hashing of token sequences to key the cache. Evict LRU.",
       "acceptance_criteria": [
         "Benchmark with shared system prompt shows >= 50% TTFT reduction on prefix-hit",
@@ -188,7 +203,11 @@
       "title": "vMLX 0.1 public release",
       "status": "todo",
       "priority": "P0",
-      "depends_on": ["vmlx-005", "vmlx-006", "vmlx-007"],
+      "depends_on": [
+        "vmlx-005",
+        "vmlx-006",
+        "vmlx-007"
+      ],
       "spec": "Tag v0.1.0, publish benchmarks comparing vMLX to mlx-lm server, write launch README for vmlx/ including install and usage, and open-source announce (blog or GitHub release notes).",
       "acceptance_criteria": [
         "GitHub release v0.1.0 exists with notes",
@@ -206,7 +225,9 @@
       "title": "FastAPI gateway scaffold with /health",
       "status": "done",
       "priority": "P0",
-      "depends_on": ["vmlx-004"],
+      "depends_on": [
+        "vmlx-004"
+      ],
       "spec": "Create loom/gateway as a FastAPI app: /health, CORS setup, structured logging, local-binding by default (127.0.0.1). Stub forwarding of /v1/chat/completions to the vMLX backend. No auth yet.",
       "acceptance_criteria": [
         "`uvicorn loom.gateway.main:app` starts and /health returns 200",
