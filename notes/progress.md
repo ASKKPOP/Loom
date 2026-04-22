@@ -80,3 +80,12 @@ Format:
   - macos-15 runners cold-install mlx wheels in ~10s; session-verify itself ran in ~30s; most CI wall time is pip install.
   - Metal-tagged tests remain skipped in CI — model weight downloads are too heavy. Gated explicitly on local M-series hardware.
 - Commits this session: 7d2ab06 chore(harness): wire session-verify to CI parity (harness-001)
+
+## 2026-04-22 — loom-002: web chat UI shipped (24/24 vitest, 10/10 verify, ⌘Enter global shortcut fixed, browser smoke passed)
+- Branch: main
+- Commits this session:
+  - 2e3d1ec feat(loom): loom-002 web chat UI — streaming, history, markdown
+  - 7229af5 chore(tasks): add loom-002 (web chat UI) as in_progress
+  - 6371bd0 docs(harness): session notes for loom-001 + harness-001, CI badge, parity note
+  - f83cc4b chore(harness): wire session-verify to CI parity (harness-001)
+  - d46acef loom-001: FastAPI gateway scaffold with /health and vMLX proxy
