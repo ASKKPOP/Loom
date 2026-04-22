@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "updated_at": "2026-04-21T04:00:00Z",
+  "updated_at": "2026-04-22T00:58:00Z",
   "tasks": [
     {
       "id": "loom-002",
       "scope": "loom",
       "phase": 1,
       "title": "Web chat UI (Claude-clone-lite) with streaming, history, markdown",
-      "status": "in_progress",
+      "status": "done",
       "priority": "P0",
       "depends_on": ["loom-001"],
       "spec": "Build loom/web as a Vite + React 18 + TypeScript + Tailwind v4 single-page app that talks to the loom-gateway (which proxies to vMLX). Scope: multi-turn chat with SSE streaming; Stop (AbortController) / Regenerate / Edit-user-message; system prompt per conversation; conversation sidebar with create/rename/delete, persisted to localStorage; model picker populated from GET /v1/models with per-conversation selection; settings panel (temperature, max_tokens, top_p); light/dark theme honoring prefers-color-scheme with a manual toggle; live connection status dot polling /health; keyboard shortcuts (⌘N new, ⌘Enter send, Esc stop, ⌘K focus composer); markdown rendering with code-block syntax highlighting (Shiki), per-message copy button; error toasts with retry. Vitest unit tests for the SSE parser, storage adapter, and conversation reducer. tsc --noEmit + eslint clean. Dev server proxies /v1/* to the gateway. Out of scope (deferred): auth, projects, artifacts, memory, tool use, Tauri desktop shell.",
@@ -29,8 +29,8 @@
         "session-verify.sh runs the web tsc + test suite when loom/web/package.json exists"
       ],
       "created_at": "2026-04-21T04:00:00Z",
-      "updated_at": "2026-04-21T04:00:00Z",
-      "notes": null
+      "updated_at": "2026-04-22T00:58:00Z",
+      "notes": "Shipped as Vite + React 18 + TS + Tailwind v4. All 15 criteria satisfied. Browser smoke test (preview MCP) confirmed ⌘N / ⌘K / ⌘Enter global shortcuts fire with focus outside the composer; connection dot turns red when gateway is unreachable; user messages persist to localStorage across conversations. ⌘Enter was originally only handled inside the composer's keydown — moved to useGlobalShortcuts by exposing submit() on ComposerHandle so ⌘Enter works from anywhere in the window. Added eslint to session-verify.sh (10 checks total) and fixed a missing @eslint/js devDep. Metal/vMLX E2E streaming path tested via sse parser unit tests; live streaming deferred until the user runs vmlx + loom-gateway together."
     },
     {
       "id": "harness-001",

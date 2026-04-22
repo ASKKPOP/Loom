@@ -77,8 +77,9 @@ fi
 
 # Loom web
 if [ -f loom/web/package.json ]; then
-  run "tsc loom/web"  bash -c "cd loom/web && pnpm tsc --noEmit"
-  run "test loom/web" bash -c "cd loom/web && pnpm test --run"
+  run "tsc loom/web"   bash -c "cd loom/web && pnpm tsc --noEmit"
+  run "eslint loom/web" bash -c "cd loom/web && pnpm lint"
+  run "test loom/web"   bash -c "cd loom/web && pnpm test --run"
 fi
 
 if [ "$ran" -eq 0 ]; then
