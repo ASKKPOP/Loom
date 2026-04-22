@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-04-22T02:30:00Z",
+  "updated_at": "2026-04-22T13:50:00Z",
   "tasks": [
     {
       "id": "loom-002",
@@ -200,22 +200,89 @@
       "id": "vmlx-008",
       "scope": "vmlx",
       "phase": 0,
-      "title": "vMLX 0.1 public release",
-      "status": "todo",
+      "title": "vMLX 0.1 public release (split into 008a/008b/008c)",
+      "status": "split",
       "priority": "P0",
       "depends_on": [
         "vmlx-005",
         "vmlx-006",
         "vmlx-007"
       ],
-      "spec": "Tag v0.1.0, publish benchmarks comparing vMLX to mlx-lm server, write launch README for vmlx/ including install and usage, and open-source announce (blog or GitHub release notes).",
+      "spec": "Original: Tag v0.1.0, publish benchmarks comparing vMLX to mlx-lm server, write launch README, open-source announce. Split on 2026-04-22 into three sequential tasks (008a integration, 008b benchmark harness, 008c release) because (1) `run_server()` only wires SingleRequestEngine today, not BatchingEngine, and (2) mlx-lm 0.31.3 already ships ThreadingHTTPServer + BatchGenerator + LRUPromptCache, so the original '>=3x throughput advantage' criterion could not be honestly asserted without a real side-by-side measurement first. 008b discovers the honest story; 008c writes the release around it.",
       "acceptance_criteria": [
-        "GitHub release v0.1.0 exists with notes",
-        "vmlx/README.md has install, quickstart, benchmark results",
-        "Public benchmark comparison shows >= 3x throughput advantage vs mlx-lm in at least one scenario"
+        "Superseded by vmlx-008a/008b/008c"
       ],
       "created_at": "2026-04-20T00:00:00Z",
-      "updated_at": "2026-04-20T00:00:00Z",
+      "updated_at": "2026-04-22T13:50:00Z",
+      "notes": "Split because: (a) run_server() uses SingleRequestEngine only; BatchingEngine exists but isn't wired, so 'vmlx serve' doesn't actually use continuous batching. (b) mlx-lm 0.31 already has ThreadingHTTPServer + continuous-batching BatchGenerator + LRUPromptCache; the >=3x bar was set against a simpler baseline that no longer exists. (c) PrefixCache is integrated with PagedKVCacheManager but NOT into BatchingEngine's inference path (which delegates to mlx_lm.BatchGenerator with its own KV management) \u2014 so exposing PrefixCache stats from a running server would currently report zeros. Honest path: split the work."
+    },
+    {
+      "id": "vmlx-008a",
+      "scope": "vmlx",
+      "phase": 0,
+      "title": "Wire BatchingEngine into run_server() as default",
+      "status": "done",
+      "priority": "P0",
+      "depends_on": [
+        "vmlx-005"
+      ],
+      "spec": "Extend `vmlx serve` CLI with `--engine {single,batching}` (default batching) and `--max-concurrent N` (default 32). Update run_server() to construct the selected engine. BatchingEngine already satisfies the ServerEngine protocol (same generate/stream_generate shape as SingleRequestEngine), so create_app() requires no changes. PrefixCache is explicitly NOT wired in this task \u2014 it is not integrated into the inference path yet (mlx_lm.BatchGenerator owns KV). Keep /admin/stats reporting prefix_cache=null until real integration exists (vmlx-009 or later).",
+      "acceptance_criteria": [
+        "`vmlx serve --help` documents --engine and --max-concurrent",
+        "Default engine is `batching` (explicit test asserts this)",
+        "`vmlx serve --engine single <model>` still works (backward compat)",
+        "Unit test: run_server build-path constructs BatchingEngine by default, SingleRequestEngine when --engine single",
+        "Metal integration test: `vmlx serve --engine batching` handles two concurrent OpenAI SDK requests without deadlock",
+        "All existing session-verify checks remain green",
+        "vmlx/README.md updated: engines table notes batching is the default, quickstart shows --engine flag"
+      ],
+      "created_at": "2026-04-22T13:50:00Z",
+      "updated_at": "2026-04-22T15:58:00Z",
+      "notes": "Shipped. CLI gained --engine {single,batching} (default batching) and --max-concurrent N (default 32). Refactored run_server() to build the selected engine via a new _build_engine() factory, exposed for tests. ServerEngine protocol extended with load/unload (previously only implicit on concrete engines; the protocol was incomplete \u2014 mypy flagged it once run_server returned via the protocol). 7 new non-metal unit tests (4 CLI parser + spy tests, 3 _build_engine factory tests). 1 new metal integration test (2-concurrent-OpenAI-SDK-requests against BatchingEngine-backed server, gated on local Metal hardware). All 10 session-verify checks green: 107 vmlx tests (+7), 11 gateway tests, 24 web vitest tests, ruff/mypy/tsc/eslint all clean. PrefixCache integration into BatchingEngine inference path deferred (mlx_lm.BatchGenerator owns KV) \u2014 /admin/stats still reports prefix_cache=null when not attached."
+    },
+    {
+      "id": "vmlx-008b",
+      "scope": "vmlx",
+      "phase": 0,
+      "title": "vMLX vs mlx-lm benchmark harness",
+      "status": "todo",
+      "priority": "P0",
+      "depends_on": [
+        "vmlx-008a"
+      ],
+      "spec": "Build vmlx/src/vmlx/benchmarks/compare_mlx_lm.py that runs a concurrency sweep (1, 4, 8, 16) against both a running `vmlx serve` and `mlx_lm.server` on the same model, with identical prompts (including large shared system prompts to stress prefix caching). Measures aggregate tokens/sec, TTFT p50/p95, and peak process RSS. Produces docs/vmlx/benchmarks/vs-mlx-lm.md with a reproducible markdown table and the exact commands. The report is HONEST \u2014 it shows scenarios where vMLX wins, where it's at parity, and where it loses. Do not gate on any specific ratio.",
+      "acceptance_criteria": [
+        "`python -m vmlx.benchmarks.compare_mlx_lm --model <id> --concurrency 1,4,8,16` produces a markdown table",
+        "Script documents: exact model id, concurrency levels, prompt shape (shared prefix length, suffix length, max_tokens), and both server versions",
+        "Runs both vmlx and mlx-lm servers on separate ports and measures via their /v1/chat/completions endpoints (apples-to-apples)",
+        "Output at docs/vmlx/benchmarks/vs-mlx-lm.md includes a reproducibility block (exact commands + environment)",
+        "Honest reporting: report ratios as measured, not targeted; include scenarios where vMLX does NOT win if that's what the data shows"
+      ],
+      "created_at": "2026-04-22T13:50:00Z",
+      "updated_at": "2026-04-22T13:50:00Z",
+      "notes": null
+    },
+    {
+      "id": "vmlx-008c",
+      "scope": "vmlx",
+      "phase": 0,
+      "title": "vMLX v0.1.0 release (tag + README + release notes)",
+      "status": "todo",
+      "priority": "P0",
+      "depends_on": [
+        "vmlx-008a",
+        "vmlx-008b"
+      ],
+      "spec": "Write the public-facing v0.1.0 based on what vmlx-008b actually measured. Expand vmlx/README.md with: installation, quickstart, engines, features (continuous batching, paged KV data structure, prefix caching data structure + TTFT microbenchmark, OpenAI API compatibility, Loom gateway integration), honest benchmark summary citing docs/vmlx/benchmarks/vs-mlx-lm.md, limitations (prefix cache not yet in serving path, Metal-only, single model per server). Tag v0.1.0 and create GitHub release with notes.",
+      "acceptance_criteria": [
+        "vmlx/README.md has: install, quickstart, engines table, features section, benchmark summary, limitations",
+        "Release notes accurately reflect measured numbers from vmlx-008b (no marketing embellishment)",
+        "`git tag v0.1.0` exists",
+        "`gh release create v0.1.0` exists on GitHub with the release notes",
+        "Limitations section explicitly lists what's NOT yet wired (PrefixCache into serving path, PagedKVCacheManager into BatchingEngine)"
+      ],
+      "created_at": "2026-04-22T13:50:00Z",
+      "updated_at": "2026-04-22T13:50:00Z",
       "notes": null
     },
     {

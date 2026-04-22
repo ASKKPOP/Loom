@@ -42,11 +42,20 @@ from vmlx.engine import GenerationResult, Message, StreamChunk
 class ServerEngine(Protocol):
     """Structural type for anything the server can drive.
 
-    Matches both :class:`vmlx.engine.SingleRequestEngine` and test stubs.
+    Matches both :class:`vmlx.engine.SingleRequestEngine`,
+    :class:`vmlx.engine.BatchingEngine`, and test stubs.
+
+    ``load`` / ``unload`` are only called by :func:`run_server`'s lifespan;
+    test stubs that drive the app via ``create_app`` directly (without
+    lifespan) can leave them as no-ops.
     """
 
     @property
     def model_id(self) -> str: ...
+
+    def load(self) -> None: ...
+
+    def unload(self) -> None: ...
 
     def generate(
         self, prompt: str, *, max_tokens: int = ...
@@ -264,19 +273,47 @@ def _sse(json_payload: str) -> bytes:
 # ─── Convenience runner (used by the CLI) ───────────────────────────
 
 
+EngineType = str  # Literal["single", "batching"] — kept as str for CLI friendliness.
+
+
+def _build_engine(
+    model_id: str, engine_type: EngineType, max_concurrent: int
+) -> ServerEngine:
+    """Construct the server engine selected by the CLI.
+
+    Split out so unit tests can assert engine-selection without booting
+    uvicorn or loading real model weights.
+    """
+    from vmlx.engine import BatchingEngine, SingleRequestEngine
+
+    if engine_type == "batching":
+        return BatchingEngine(model_id, max_concurrent=max_concurrent)
+    if engine_type == "single":
+        return SingleRequestEngine(model_id)
+    raise ValueError(
+        f"unknown engine_type {engine_type!r}; expected 'single' or 'batching'"
+    )
+
+
 def run_server(
     model_id: str,
     *,
     host: str = "127.0.0.1",
     port: int = 8000,
     log_level: str = "info",
+    engine_type: EngineType = "batching",
+    max_concurrent: int = 32,
 ) -> None:
-    """Build the real engine, load it, and serve with uvicorn."""
+    """Build the selected engine, load it, and serve with uvicorn.
+
+    ``engine_type`` defaults to ``"batching"`` — continuous-batched serving
+    is vMLX's point over mlx-lm's single-request baseline. Pass
+    ``engine_type="single"`` to use the reference baseline
+    (:class:`SingleRequestEngine`) instead.
+    """
     import uvicorn
 
-    from vmlx.engine import SingleRequestEngine
-
-    engine = SingleRequestEngine(model_id)
+    engine = _build_engine(model_id, engine_type, max_concurrent)
 
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:

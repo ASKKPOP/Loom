@@ -338,3 +338,35 @@ def test_admin_stats_reports_prefix_cache_hit_rate() -> None:
     assert pc_block["misses"] == 1
     assert pc_block["hit_rate"] == pytest.approx(0.5)
     assert pc_block["cached_blocks"] == 1
+
+
+# ─── _build_engine (run_server's engine factory) ────────────────────
+
+
+def test_build_engine_defaults_to_batching() -> None:
+    """The serving path defaults to BatchingEngine — continuous batching is
+    vMLX's point over mlx-lm's single-request baseline."""
+    from vmlx.api.server import _build_engine
+    from vmlx.engine import BatchingEngine
+
+    engine = _build_engine("mock/model", "batching", max_concurrent=16)
+    assert isinstance(engine, BatchingEngine)
+    assert engine.model_id == "mock/model"
+    # max_concurrent is private but observable via constructor round-trip:
+    assert engine._max_concurrent == 16  # type: ignore[attr-defined]
+
+
+def test_build_engine_single_backward_compat() -> None:
+    from vmlx.api.server import _build_engine
+    from vmlx.engine import SingleRequestEngine
+
+    engine = _build_engine("mock/model", "single", max_concurrent=32)
+    assert isinstance(engine, SingleRequestEngine)
+    assert engine.model_id == "mock/model"
+
+
+def test_build_engine_rejects_unknown_type() -> None:
+    from vmlx.api.server import _build_engine
+
+    with pytest.raises(ValueError, match="unknown engine_type"):
+        _build_engine("mock/model", "bogus", max_concurrent=1)

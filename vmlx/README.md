@@ -25,8 +25,12 @@ python3.12 -m venv ../.venv
 ## Quickstart
 
 ```bash
-# Serve a model on localhost:8000 with an OpenAI-compatible API
+# Serve a model on localhost:8000 with an OpenAI-compatible API.
+# Defaults to the batching engine; pass --engine single for the reference baseline.
 vmlx serve mlx-community/Qwen2.5-0.5B-Instruct-4bit
+
+# Override the scheduler width (default: 32):
+vmlx serve mlx-community/Qwen2.5-0.5B-Instruct-4bit --max-concurrent 16
 ```
 
 Then from any OpenAI client — Python SDK, curl, LangChain, LiteLLM, etc.:
@@ -59,8 +63,8 @@ Streaming works identically — pass `stream=True`.
 
 | Engine | When to use |
 |---|---|
-| `single` | Baseline reference. One request at a time. Lowest latency per request. |
-| `batching` | Continuous-batched. Many concurrent requests. Massively higher aggregate throughput. Backed by `mlx_lm.BatchGenerator`. |
+| `single` | Baseline reference. One request at a time. Lowest latency per request. Select with `--engine single`. |
+| `batching` | **Default.** Continuous-batched. Many concurrent requests. Higher aggregate throughput. Backed by `mlx_lm.BatchGenerator`. Scheduler width via `--max-concurrent N` (default 32). |
 
 Both satisfy the same protocol — the API server and benchmark harness work with either.
 
