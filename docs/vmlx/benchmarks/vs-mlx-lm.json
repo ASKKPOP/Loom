@@ -1,0 +1,123 @@
+{
+  "timestamp": "2026-04-22T23:15:40+00:00",
+  "model": "mlx-community/Qwen2.5-0.5B-Instruct-4bit",
+  "concurrency_levels": [
+    1,
+    4,
+    8,
+    16
+  ],
+  "n_per_level": 8,
+  "max_tokens": 64,
+  "shared_prefix_chars": 1200,
+  "suffix_chars": 59,
+  "results": [
+    {
+      "server": "vmlx",
+      "concurrency": 1,
+      "n_requests": 8,
+      "ok_count": 8,
+      "ttft_p50_ms": 30.42627098329831,
+      "ttft_p95_ms": 59.823341356241116,
+      "tokens_per_sec": 393.0384923274602,
+      "peak_rss_mb": 527.78125,
+      "wall_clock_s": 1.0507876659976318
+    },
+    {
+      "server": "vmlx",
+      "concurrency": 4,
+      "n_requests": 8,
+      "ok_count": 8,
+      "ttft_p50_ms": 102.8785625094315,
+      "ttft_p95_ms": 358.84344540099846,
+      "tokens_per_sec": 445.91882584324696,
+      "peak_rss_mb": 531.453125,
+      "wall_clock_s": 0.946360583009664
+    },
+    {
+      "server": "vmlx",
+      "concurrency": 8,
+      "n_requests": 8,
+      "ok_count": 8,
+      "ttft_p50_ms": 131.18516649410594,
+      "ttft_p95_ms": 177.0698916487163,
+      "tokens_per_sec": 860.8236437352018,
+      "peak_rss_mb": 532.203125,
+      "wall_clock_s": 0.4855814579932485
+    },
+    {
+      "server": "vmlx",
+      "concurrency": 16,
+      "n_requests": 8,
+      "ok_count": 8,
+      "ttft_p50_ms": 172.49687500589062,
+      "ttft_p95_ms": 172.9002813633997,
+      "tokens_per_sec": 869.056565948951,
+      "peak_rss_mb": 533.015625,
+      "wall_clock_s": 0.4855840419768356
+    },
+    {
+      "server": "mlx-lm",
+      "concurrency": 1,
+      "n_requests": 8,
+      "ok_count": 8,
+      "ttft_p50_ms": 70.66491649311502,
+      "ttft_p95_ms": 112.2339354100404,
+      "tokens_per_sec": 233.92150735572997,
+      "peak_rss_mb": 527.578125,
+      "wall_clock_s": 1.7740993750048801
+    },
+    {
+      "server": "mlx-lm",
+      "concurrency": 4,
+      "n_requests": 8,
+      "ok_count": 8,
+      "ttft_p50_ms": 206.0853334987769,
+      "ttft_p95_ms": 309.35838518780656,
+      "tokens_per_sec": 429.2298739195209,
+      "peak_rss_mb": 563.390625,
+      "wall_clock_s": 0.955199125019135
+    },
+    {
+      "server": "mlx-lm",
+      "concurrency": 8,
+      "n_requests": 8,
+      "ok_count": 8,
+      "ttft_p50_ms": 412.0562705065822,
+      "ttft_p95_ms": 417.76810833835043,
+      "tokens_per_sec": 489.170788720948,
+      "peak_rss_mb": 612.59375,
+      "wall_clock_s": 0.8422416250105016
+    },
+    {
+      "server": "mlx-lm",
+      "concurrency": 16,
+      "n_requests": 8,
+      "ok_count": 8,
+      "ttft_p50_ms": 410.4605625179829,
+      "ttft_p95_ms": 416.46371930110035,
+      "tokens_per_sec": 490.0987951461036,
+      "peak_rss_mb": 613.046875,
+      "wall_clock_s": 0.8406468330067582
+    }
+  ],
+  "environment": {
+    "python": "3.12.13",
+    "platform": "macOS-26.4.1-arm64-arm-64bit",
+    "hardware": "Apple M4 Max (Mac16,9)",
+    "vmlx": "0.0.1",
+    "mlx_lm": "0.31.3"
+  },
+  "servers": [
+    {
+      "name": "vmlx",
+      "version": "0.0.1",
+      "port": "49353"
+    },
+    {
+      "name": "mlx-lm",
+      "version": "0.31.3",
+      "port": "49354"
+    }
+  ]
+}

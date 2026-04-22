@@ -90,6 +90,16 @@ python -m vmlx.benchmarks.run \
 
 Every run appends one line to `vmlx/benchmarks/history.jsonl`.
 
+### Head-to-head vs `mlx_lm.server`
+
+```bash
+python -m vmlx.benchmarks.compare_mlx_lm \
+  --model mlx-community/Qwen2.5-0.5B-Instruct-4bit \
+  --concurrency 1,4,8,16 --requests-per-level 8
+```
+
+Boots both `vmlx serve` and `mlx_lm.server` on separate ports, fires a shared-prefix workload at each concurrency level, and writes a markdown report to [`docs/vmlx/benchmarks/vs-mlx-lm.md`](../docs/vmlx/benchmarks/vs-mlx-lm.md). The report is honest — it shows where vMLX wins, ties, and (if it does) loses.
+
 ## License
 
 Apache 2.0 — see [../LICENSE](../LICENSE).
