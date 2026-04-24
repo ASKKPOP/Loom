@@ -2,7 +2,7 @@ import type { Settings } from "../types";
 
 export const DEFAULT_SETTINGS: Settings = {
   temperature: 0.7,
-  maxTokens: 1024,
+  maxTokens: 512,
   topP: 1.0,
   theme: "system",
   serverUrl: "",

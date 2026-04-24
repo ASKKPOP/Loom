@@ -22,7 +22,7 @@ export type ConversationsAction =
   | { type: "truncate-after"; id: string; messageId: string };
 
 export const DEFAULT_SYSTEM_PROMPT =
-  "You are Loom, a helpful local AI assistant. Answer concisely and accurately.";
+  "You are Loom, a helpful local AI assistant. Answer the user's question directly and concisely. Do not list topics, categories, or things you can help with unless explicitly asked.";
 
 export function emptyState(): ConversationsState {
   return { conversations: [], activeId: null };

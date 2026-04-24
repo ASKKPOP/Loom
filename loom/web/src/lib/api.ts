@@ -18,6 +18,19 @@ function base(url: string | undefined): string {
   return (url ?? "").replace(/\/$/, "");
 }
 
+/** Returns true when any trimmed line appears 3+ times — catches model repetition loops. */
+function hasRepetition(content: string): boolean {
+  const lines = content.split("\n").map((l) => l.trim()).filter((l) => l.length > 4);
+  if (lines.length < 6) return false;
+  const counts = new Map<string, number>();
+  for (const line of lines) {
+    const n = (counts.get(line) ?? 0) + 1;
+    if (n >= 3) return true;
+    counts.set(line, n);
+  }
+  return false;
+}
+
 export async function listModels(baseUrl = ""): Promise<ModelInfo[]> {
   const res = await fetch(`${base(baseUrl)}/v1/models`);
   if (!res.ok) throw new Error(`GET /v1/models → ${res.status}`);
@@ -55,6 +68,7 @@ export async function streamChatCompletion(init: ChatRequestInit): Promise<void>
   }
   const parser = new SseParser();
   const reader = res.body.getReader();
+  let accumulated = "";
   try {
     for (;;) {
       const { value, done } = await reader.read();
@@ -67,7 +81,14 @@ export async function streamChatCompletion(init: ChatRequestInit): Promise<void>
         try {
           const chunk = JSON.parse(ev.data) as ChatCompletionChunk;
           const delta = chunk.choices?.[0]?.delta?.content;
-          if (delta) init.onToken(delta);
+          if (delta) {
+            accumulated += delta;
+            if (hasRepetition(accumulated)) {
+              init.onDone();
+              return;
+            }
+            init.onToken(delta);
+          }
         } catch {
           // malformed chunk — skip
         }
