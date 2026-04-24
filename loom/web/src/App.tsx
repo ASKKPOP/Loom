@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 import type { ComposerHandle } from "./components/Composer";
 import { Composer } from "./components/Composer";
-import { Header } from "./components/Header";
 import { MessageList } from "./components/MessageList";
 import { SettingsModal } from "./components/SettingsModal";
 import { Sidebar } from "./components/Sidebar";
@@ -21,6 +21,12 @@ import { useTheme } from "./state/theme";
 import { useToasts } from "./state/toasts";
 import type { ModelInfo, Settings } from "./types";
 
+// Lazy-loaded admin pages
+const AdminModels = lazy(() => import("./admin/pages/Models").then(m => ({ default: m.ModelsPage })));
+const AdminAIConfig = lazy(() => import("./admin/pages/AIConfig").then(m => ({ default: m.AIConfigPage })));
+const AdminUsers = lazy(() => import("./admin/pages/Users").then(m => ({ default: m.UsersPage })));
+const AdminSecurity = lazy(() => import("./admin/pages/Security").then(m => ({ default: m.SecurityPage })));
+
 const storage = createStorage();
 
 function loadInitial(): ConversationsState {
@@ -30,6 +36,14 @@ function loadInitial(): ConversationsState {
     conversations: convs,
     activeId: active && convs.some((c) => c.id === active) ? active : (convs[0]?.id ?? null),
   };
+}
+
+function AdminFallback() {
+  return (
+    <div className="flex-1 flex items-center justify-center text-sm text-[var(--loom-fg-soft)]">
+      Loading…
+    </div>
+  );
 }
 
 export default function App() {
@@ -47,7 +61,6 @@ export default function App() {
   const { theme, toggle: toggleTheme } = useTheme();
   const { toasts, push: pushToast, dismiss } = useToasts();
 
-  // Persist state whenever it changes.
   useEffect(() => {
     storage.saveConversations(state.conversations);
     storage.saveActive(state.activeId);
@@ -57,30 +70,25 @@ export default function App() {
     storage.saveSettings(settings);
   }, [settings]);
 
-  // Fetch model list on connect. Retry when the connection comes back.
   useEffect(() => {
     if (connection !== "ok") return;
     let cancelled = false;
     listModels(settings.serverUrl)
       .then((m) => { if (!cancelled) setModels(m); })
       .catch((e) => {
-        if (!cancelled) {
-          pushToast({ kind: "error", message: `Couldn't load models: ${e.message}` });
-        }
+        if (!cancelled) pushToast({ kind: "error", message: `Couldn't load models: ${e.message}` });
       });
     return () => { cancelled = true; };
   }, [connection, pushToast, settings.serverUrl]);
 
   const active = activeConversation(state);
 
-  // On first run, auto-create a conversation so the UI has something to show.
   useEffect(() => {
     if (state.conversations.length === 0) {
       dispatch({ type: "create", model: null });
     }
   }, [state.conversations.length]);
 
-  // Default a newly-created conversation's model to the first available model.
   useEffect(() => {
     if (active && !active.model && models.length > 0 && models[0]) {
       dispatch({ type: "set-model", id: active.id, model: models[0].id });
@@ -106,7 +114,6 @@ export default function App() {
       const messagesForApi: { role: "system" | "user" | "assistant"; content: string }[] = [];
       if (conv.systemPrompt) messagesForApi.push({ role: "system", content: conv.systemPrompt });
       for (const m of conv.messages) {
-        // Skip previous erroring assistant messages with empty bodies.
         if (m.role === "assistant" && m.error && !m.content) continue;
         messagesForApi.push({ role: m.role, content: m.content });
       }
@@ -154,15 +161,12 @@ export default function App() {
       if (!active) return;
       const user = newMessage("user", text);
       dispatch({ type: "append-message", id: active.id, message: user });
-      // Kick off the assistant turn on the next tick so the dispatch lands first.
       queueMicrotask(() => runTurn(active.id));
     },
     [active, runTurn]
   );
 
-  const stop = useCallback(() => {
-    abortRef.current?.abort();
-  }, []);
+  const stop = useCallback(() => { abortRef.current?.abort(); }, []);
 
   const regenerate = useCallback(
     (messageId: string) => {
@@ -204,46 +208,77 @@ export default function App() {
     return null;
   }, [active]);
 
+  const sidebar = (
+    <Sidebar
+      conversations={state.conversations}
+      activeId={state.activeId}
+      onNew={() => dispatch({ type: "create", model: models[0]?.id ?? null })}
+      onActivate={(id) => dispatch({ type: "activate", id })}
+      onRename={(id, title) => dispatch({ type: "rename", id, title })}
+      onDelete={(id) => dispatch({ type: "delete", id })}
+      models={models}
+      model={active?.model ?? null}
+      canPickModel={Boolean(active)}
+      onModelChange={(id) => active && dispatch({ type: "set-model", id: active.id, model: id })}
+      status={connection}
+      theme={theme}
+      onToggleTheme={toggleTheme}
+      onOpenSettings={() => setSettingsOpen(true)}
+    />
+  );
+
   return (
-    <div className="flex h-full">
-      <Sidebar
-        conversations={state.conversations}
-        activeId={state.activeId}
-        onNew={() => dispatch({ type: "create", model: models[0]?.id ?? null })}
-        onActivate={(id) => dispatch({ type: "activate", id })}
-        onRename={(id, title) => dispatch({ type: "rename", id, title })}
-        onDelete={(id) => dispatch({ type: "delete", id })}
-      />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header
-          title={active?.title ?? "No conversation"}
-          models={models}
-          model={active?.model ?? null}
-          canPickModel={Boolean(active)}
-          onModelChange={(id) => active && dispatch({ type: "set-model", id: active.id, model: id })}
-          status={connection}
-          theme={theme}
-          onToggleTheme={toggleTheme}
-          onOpenSettings={() => setSettingsOpen(true)}
+    <div className="flex h-full bg-[var(--loom-bg)]">
+      {sidebar}
+
+      <Routes>
+        {/* Chat view */}
+        <Route
+          path="/"
+          element={
+            <div className="flex-1 flex flex-col min-w-0">
+              {active ? (
+                <MessageList
+                  messages={active.messages}
+                  onEdit={editUserMessage}
+                  onRegenerate={regenerate}
+                  lastAssistantId={lastAssistantId}
+                />
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-sm text-[var(--loom-fg-soft)]">
+                  Create a conversation to get started.
+                </div>
+              )}
+              <Composer
+                ref={composerRef}
+                disabled={!active}
+                streaming={streamingId !== null}
+                onSubmit={send}
+                onStop={stop}
+              />
+            </div>
+          }
         />
-        {active ? (
-          <MessageList
-            messages={active.messages}
-            onEdit={editUserMessage}
-            onRegenerate={regenerate}
-            lastAssistantId={lastAssistantId}
-          />
-        ) : (
-          <div className="flex-1" />
-        )}
-        <Composer
-          ref={composerRef}
-          disabled={!active}
-          streaming={streamingId !== null}
-          onSubmit={send}
-          onStop={stop}
+
+        {/* Admin views */}
+        <Route path="/admin" element={<Navigate to="/admin/models" replace />} />
+        <Route
+          path="/admin/*"
+          element={
+            <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+              <Suspense fallback={<AdminFallback />}>
+                <Routes>
+                  <Route path="models" element={<AdminModels />} />
+                  <Route path="ai-config" element={<AdminAIConfig />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="security" element={<AdminSecurity />} />
+                  <Route path="*" element={<Navigate to="/admin/models" replace />} />
+                </Routes>
+              </Suspense>
+            </div>
+          }
         />
-      </div>
+      </Routes>
 
       {active && (
         <SettingsModal

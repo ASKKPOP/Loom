@@ -24,14 +24,15 @@ export function MessageList({ messages, onEdit, onRegenerate, lastAssistantId }:
   return (
     <div className="flex-1 overflow-y-auto">
       {messages.length === 0 ? (
-        <div className="h-full flex items-center justify-center text-sm text-[var(--loom-fg-soft)] px-6">
-          <div className="text-center">
-            <p className="text-base font-medium mb-1">Start a new chat</p>
-            <p>Type a message below. Your data stays on this Mac.</p>
+        <div className="h-full flex items-center justify-center">
+          <div className="text-center px-8 max-w-sm">
+            <div className="w-12 h-12 rounded-full bg-[var(--loom-accent)] text-white flex items-center justify-center text-xl font-bold mx-auto mb-4">L</div>
+            <p className="text-base font-semibold text-[var(--loom-fg)] mb-1">How can I help?</p>
+            <p className="text-sm text-[var(--loom-fg-soft)]">Your data stays on this Mac.</p>
           </div>
         </div>
       ) : (
-        <div>
+        <div className="py-4 max-w-3xl mx-auto w-full">
           {messages.map((m) => (
             <Message
               key={m.id}

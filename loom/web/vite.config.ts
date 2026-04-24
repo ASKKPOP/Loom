@@ -15,6 +15,7 @@ export default defineConfig({
     proxy: {
       "/v1": { target: gateway, changeOrigin: true },
       "/health": { target: gateway, changeOrigin: true },
+      "/api": { target: gateway, changeOrigin: true },
     },
   },
 });
