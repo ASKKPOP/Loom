@@ -7,6 +7,7 @@ import { SettingsModal } from "./components/SettingsModal";
 import { Sidebar } from "./components/Sidebar";
 import { Toasts } from "./components/Toasts";
 import { listModels, streamChatCompletion } from "./lib/api";
+import { getActiveSystemPrompt } from "./lib/skills";
 import { createStorage } from "./lib/storage";
 import { useGlobalShortcuts } from "./lib/shortcuts";
 import { useConnection } from "./state/connection";
@@ -89,7 +90,7 @@ export default function App() {
 
   useEffect(() => {
     if (state.conversations.length === 0) {
-      dispatch({ type: "create", model: null });
+      dispatch({ type: "create", model: null, systemPrompt: getActiveSystemPrompt() ?? undefined });
     }
   }, [state.conversations.length]);
 
@@ -194,7 +195,7 @@ export default function App() {
   useGlobalShortcuts(
     useMemo(
       () => ({
-        newChat: () => dispatch({ type: "create", model: models[0]?.id ?? null }),
+        newChat: () => dispatch({ type: "create", model: models[0]?.id ?? null, systemPrompt: getActiveSystemPrompt() ?? undefined }),
         focusComposer: () => composerRef.current?.focus(),
         sendMessage: () => composerRef.current?.submit(),
         stop,
@@ -216,7 +217,7 @@ export default function App() {
     <Sidebar
       conversations={state.conversations}
       activeId={state.activeId}
-      onNew={() => dispatch({ type: "create", model: models[0]?.id ?? null })}
+      onNew={() => dispatch({ type: "create", model: models[0]?.id ?? null, systemPrompt: getActiveSystemPrompt() ?? undefined })}
       onActivate={(id) => dispatch({ type: "activate", id })}
       onRename={(id, title) => dispatch({ type: "rename", id, title })}
       onDelete={(id) => dispatch({ type: "delete", id })}

@@ -245,9 +245,9 @@ export function Sidebar({
     <aside className="w-64 shrink-0 bg-[var(--loom-sidebar)] h-full flex flex-col select-none border-r border-[var(--loom-border)]">
       {/* Top bar */}
       <div className="flex items-center justify-between px-3 pt-3 pb-2">
-        <Link to="/" className="flex items-center gap-2 text-sm font-semibold text-[var(--loom-fg)] no-underline">
-          <span className="w-6 h-6 rounded-md bg-[var(--loom-accent)] text-white flex items-center justify-center text-xs font-bold">L</span>
-          Loom
+        <Link to="/" className="flex items-center gap-2 text-sm font-semibold text-[var(--loom-fg)] no-underline min-w-0">
+          <img src="/logo.svg" alt="eKlotho" className="w-7 h-7 shrink-0" />
+          <span className="truncate">eKlotho Loom</span>
         </Link>
         <div className="flex items-center gap-0.5">
           {/* New session */}

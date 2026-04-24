@@ -28,6 +28,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from loom.gateway import __version__
 from loom.gateway import config as cfg
 from loom.gateway.admin import router as admin_router
+from loom.gateway.connectors import router as connectors_router
 from loom.gateway.logging_setup import configure as configure_logging
 
 log = logging.getLogger(__name__)
@@ -79,6 +80,7 @@ def create_app(
     )
 
     app.include_router(admin_router)
+    app.include_router(connectors_router)
 
     # ── Health ──────────────────────────────────────────────────────────────
 

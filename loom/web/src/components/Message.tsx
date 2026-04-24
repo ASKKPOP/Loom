@@ -81,8 +81,8 @@ export function Message({ message, onEdit, onRegenerate, canRegenerate }: Props)
   return (
     <div className="flex gap-3 px-4 py-3 group" data-role="assistant">
       {/* Avatar */}
-      <div className="shrink-0 w-7 h-7 rounded-full bg-[var(--loom-accent)] text-white flex items-center justify-center text-xs font-bold mt-0.5">
-        L
+      <div className="shrink-0 w-7 h-7 mt-0.5">
+        <img src="/logo.svg" alt="eKlotho" className="w-full h-full" />
       </div>
       <div className="flex-1 min-w-0">
         {message.content === "" && message.streaming ? (

@@ -26,9 +26,9 @@ export function MessageList({ messages, onEdit, onRegenerate, lastAssistantId }:
       {messages.length === 0 ? (
         <div className="h-full flex items-center justify-center">
           <div className="text-center px-8 max-w-sm">
-            <div className="w-12 h-12 rounded-full bg-[var(--loom-accent)] text-white flex items-center justify-center text-xl font-bold mx-auto mb-4">L</div>
+            <img src="/logo.svg" alt="eKlotho" className="w-14 h-14 mx-auto mb-4" />
             <p className="text-base font-semibold text-[var(--loom-fg)] mb-1">How can I help?</p>
-            <p className="text-sm text-[var(--loom-fg-soft)]">Your data stays on this Mac.</p>
+            <p className="text-sm text-[var(--loom-fg-soft)]">eKlotho Loom — your data stays on this Mac.</p>
           </div>
         </div>
       ) : (
