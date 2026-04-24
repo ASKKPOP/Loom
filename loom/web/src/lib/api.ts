@@ -18,16 +18,23 @@ function base(url: string | undefined): string {
   return (url ?? "").replace(/\/$/, "");
 }
 
-/** Returns true when any trimmed line appears 3+ times — catches model repetition loops. */
+/** Returns true when the model output looks like a runaway repetition or unprompted list. */
 function hasRepetition(content: string): boolean {
-  const lines = content.split("\n").map((l) => l.trim()).filter((l) => l.length > 4);
-  if (lines.length < 6) return false;
+  const lines = content.split("\n").map((l) => l.trim()).filter((l) => l.length > 2);
+  if (lines.length < 4) return false;
+
+  // Any line repeats 2+ times → loop detected.
   const counts = new Map<string, number>();
   for (const line of lines) {
     const n = (counts.get(line) ?? 0) + 1;
-    if (n >= 3) return true;
+    if (n >= 2) return true;
     counts.set(line, n);
   }
+
+  // 5+ consecutive numbered list items → unprompted enumeration.
+  const numbered = lines.filter((l) => /^\d+\.\s+\S/.test(l));
+  if (numbered.length >= 5) return true;
+
   return false;
 }
 
