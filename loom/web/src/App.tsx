@@ -43,7 +43,7 @@ export default function App() {
   const abortRef = useRef<AbortController | null>(null);
   const composerRef = useRef<ComposerHandle>(null);
 
-  const connection = useConnection(10000);
+  const connection = useConnection(10000, settings.serverUrl);
   const { theme, toggle: toggleTheme } = useTheme();
   const { toasts, push: pushToast, dismiss } = useToasts();
 
@@ -61,7 +61,7 @@ export default function App() {
   useEffect(() => {
     if (connection !== "ok") return;
     let cancelled = false;
-    listModels()
+    listModels(settings.serverUrl)
       .then((m) => { if (!cancelled) setModels(m); })
       .catch((e) => {
         if (!cancelled) {
@@ -69,7 +69,7 @@ export default function App() {
         }
       });
     return () => { cancelled = true; };
-  }, [connection, pushToast]);
+  }, [connection, pushToast, settings.serverUrl]);
 
   const active = activeConversation(state);
 
@@ -118,6 +118,7 @@ export default function App() {
           temperature: settings.temperature,
           maxTokens: settings.maxTokens,
           topP: settings.topP,
+          baseUrl: settings.serverUrl,
           signal: ac.signal,
           onToken: (tok) =>
             dispatch({ type: "append-token", id: convId, messageId: assistant.id, token: tok }),

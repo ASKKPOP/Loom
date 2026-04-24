@@ -26,6 +26,8 @@ export interface Settings {
   maxTokens: number;
   topP: number;
   theme: "light" | "dark" | "system";
+  /** Base URL for the gateway (empty string = same-origin proxy). */
+  serverUrl: string;
 }
 
 export interface ModelInfo {

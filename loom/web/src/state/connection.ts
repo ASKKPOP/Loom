@@ -3,12 +3,12 @@ import { checkHealth } from "../lib/api";
 
 export type ConnectionStatus = "unknown" | "ok" | "down";
 
-export function useConnection(pollMs = 10000): ConnectionStatus {
+export function useConnection(pollMs = 10000, baseUrl = ""): ConnectionStatus {
   const [status, setStatus] = useState<ConnectionStatus>("unknown");
   useEffect(() => {
     let stopped = false;
     const tick = async () => {
-      const ok = await checkHealth();
+      const ok = await checkHealth(baseUrl);
       if (!stopped) setStatus(ok ? "ok" : "down");
     };
     tick();
@@ -17,6 +17,6 @@ export function useConnection(pollMs = 10000): ConnectionStatus {
       stopped = true;
       clearInterval(t);
     };
-  }, [pollMs]);
+  }, [pollMs, baseUrl]);
   return status;
 }

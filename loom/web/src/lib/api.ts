@@ -10,18 +10,24 @@ export interface ChatRequestInit {
   signal: AbortSignal;
   onToken: (token: string) => void;
   onDone: () => void;
+  /** Base URL for the backend (empty string = same-origin proxy). */
+  baseUrl?: string;
 }
 
-export async function listModels(): Promise<ModelInfo[]> {
-  const res = await fetch("/v1/models");
+function base(url: string | undefined): string {
+  return (url ?? "").replace(/\/$/, "");
+}
+
+export async function listModels(baseUrl = ""): Promise<ModelInfo[]> {
+  const res = await fetch(`${base(baseUrl)}/v1/models`);
   if (!res.ok) throw new Error(`GET /v1/models → ${res.status}`);
   const body = (await res.json()) as { data?: Array<{ id: string }> };
   return (body.data ?? []).map((m) => ({ id: m.id }));
 }
 
-export async function checkHealth(): Promise<boolean> {
+export async function checkHealth(baseUrl = ""): Promise<boolean> {
   try {
-    const res = await fetch("/health", { method: "GET" });
+    const res = await fetch(`${base(baseUrl)}/health`, { method: "GET" });
     return res.ok;
   } catch {
     return false;
@@ -37,7 +43,7 @@ export async function streamChatCompletion(init: ChatRequestInit): Promise<void>
     max_tokens: init.maxTokens,
     top_p: init.topP,
   };
-  const res = await fetch("/v1/chat/completions", {
+  const res = await fetch(`${base(init.baseUrl)}/v1/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
     body: JSON.stringify(body),

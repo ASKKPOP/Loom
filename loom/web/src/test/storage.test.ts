@@ -44,8 +44,8 @@ describe("storage", () => {
   });
 
   it("persists settings", () => {
-    s.saveSettings({ temperature: 0.3, maxTokens: 512, topP: 0.9, theme: "dark" });
-    expect(s.loadSettings()).toEqual({ temperature: 0.3, maxTokens: 512, topP: 0.9, theme: "dark" });
+    s.saveSettings({ temperature: 0.3, maxTokens: 512, topP: 0.9, theme: "dark", serverUrl: "http://localhost:8080" });
+    expect(s.loadSettings()).toEqual({ temperature: 0.3, maxTokens: 512, topP: 0.9, theme: "dark", serverUrl: "http://localhost:8080" });
   });
 
   it("persists theme override", () => {
