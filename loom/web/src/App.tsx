@@ -27,6 +27,10 @@ const AdminAIConfig = lazy(() => import("./admin/pages/AIConfig").then(m => ({ d
 const AdminUsers = lazy(() => import("./admin/pages/Users").then(m => ({ default: m.UsersPage })));
 const AdminSecurity = lazy(() => import("./admin/pages/Security").then(m => ({ default: m.SecurityPage })));
 
+// Lazy-loaded customize pages
+const CustomizeSkills = lazy(() => import("./pages/CustomizeSkills").then(m => ({ default: m.CustomizeSkillsPage })));
+const CustomizeConnectors = lazy(() => import("./pages/CustomizeConnectors").then(m => ({ default: m.CustomizeConnectorsPage })));
+
 const storage = createStorage();
 
 function loadInitial(): ConversationsState {
@@ -256,6 +260,23 @@ export default function App() {
                 onSubmit={send}
                 onStop={stop}
               />
+            </div>
+          }
+        />
+
+        {/* Customize views */}
+        <Route path="/customize" element={<Navigate to="/customize/skills" replace />} />
+        <Route
+          path="/customize/*"
+          element={
+            <div className="flex-1 flex min-w-0 overflow-hidden">
+              <Suspense fallback={<AdminFallback />}>
+                <Routes>
+                  <Route path="skills" element={<CustomizeSkills />} />
+                  <Route path="connectors" element={<CustomizeConnectors />} />
+                  <Route path="*" element={<Navigate to="/customize/skills" replace />} />
+                </Routes>
+              </Suspense>
             </div>
           }
         />

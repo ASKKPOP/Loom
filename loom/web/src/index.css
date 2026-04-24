@@ -4,30 +4,30 @@
 
 :root {
   color-scheme: light;
-  --loom-sidebar: #f9f9f7;
+  --loom-sidebar: #f5f4f0;
   --loom-bg: #ffffff;
-  --loom-bg-soft: #f5f5f3;
-  --loom-user-bubble: #efefed;
-  --loom-fg: #1a1a1a;
-  --loom-fg-soft: #6b6b6b;
-  --loom-border: #e8e8e6;
-  --loom-accent: #7c3aed;
-  --loom-accent-soft: #ede9fe;
+  --loom-bg-soft: #f7f6f2;
+  --loom-user-bubble: #eeede9;
+  --loom-fg: #1a1917;
+  --loom-fg-soft: #706f6b;
+  --loom-border: #e5e4e0;
+  --loom-accent: #c96442;
+  --loom-accent-soft: #fdf1ed;
   --loom-danger: #dc2626;
   --loom-ok: #16a34a;
 }
 
 .dark {
   color-scheme: dark;
-  --loom-sidebar: #202123;
-  --loom-bg: #2c2c2e;
-  --loom-bg-soft: #1e1e20;
-  --loom-user-bubble: #3a3a3c;
-  --loom-fg: #ececec;
-  --loom-fg-soft: #8e8ea0;
-  --loom-border: #3a3a3c;
-  --loom-accent: #a78bfa;
-  --loom-accent-soft: #2d1f5e;
+  --loom-sidebar: #1a1917;
+  --loom-bg: #212120;
+  --loom-bg-soft: #2a2927;
+  --loom-user-bubble: #3a3835;
+  --loom-fg: #eeece8;
+  --loom-fg-soft: #9a9893;
+  --loom-border: #3a3835;
+  --loom-accent: #c96442;
+  --loom-accent-soft: #3a1f15;
   --loom-danger: #ef4444;
   --loom-ok: #22c55e;
 }
