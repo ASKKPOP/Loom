@@ -107,3 +107,12 @@ Format:
   - d3a0e9c feat(vmlx): vmlx-006 block-paged KV cache for Apple unified memory
   - d7c8a65 docs(harness): session note — loom-002: web chat UI shipped (24/24 vitest, 10/10 verify, ⌘Enter global shortcut fixed, browser smoke passed)
   - 2e3d1ec feat(loom): loom-002 web chat UI — streaming, history, markdown
+
+## 2026-05-15 — loom-003 + StrictMode fix: gateway date/capability preamble shipped (28/28 tests, live browser smoke through 72B confirmed); fixed React 18 double-create 'New chat' bug; filed loom-004 through loom-008; nginx fronting in infra/
+- Branch: claude/dazzling-heyrovsky-dfa790
+- Commits this session:
+  - 36526b0 chore(infra): localhost-only nginx fronting on :80
+  - cff7591 feat(loom): loom-003 gateway date/capability preamble; fix duplicate New chat on first load
+  - 5a8adc7 docs(harness): session note — vmlx-007: prefix caching (54.5% TTFT reduction ≥ 50% criterion), /admin/stats hit-rate endpoint, shared block tables refactor (+45 unit tests, +15 metal)
+  - 2288516 feat(vmlx): vmlx-007 prefix caching for shared system prompts
+  - 5a60338 docs(harness): session note — vmlx-006: block-paged KV cache for Apple unified memory — 26 unit + 3 metal (byte-identical SDPA) tests, >0.85 utilization @ B=16, 29-54% savings vs padded baseline
