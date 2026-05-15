@@ -24,3 +24,9 @@ def vmlx_url() -> str:
 
 def log_level() -> str:
     return _get("LOOM_LOG_LEVEL", "info").lower()
+
+
+def inject_context() -> bool:
+    """Whether the gateway should inject a date/capability preamble into chat
+    requests. Set LOOM_INJECT_CONTEXT=false for transparent passthrough."""
+    return _get("LOOM_INJECT_CONTEXT", "true").lower() not in {"0", "false", "no", "off"}

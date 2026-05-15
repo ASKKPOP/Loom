@@ -12,6 +12,7 @@ import { useGlobalShortcuts } from "./lib/shortcuts";
 import { useConnection } from "./state/connection";
 import {
   activeConversation,
+  newConversation,
   newMessage,
   reducer,
   type ConversationsState,
@@ -19,12 +20,26 @@ import {
 import { DEFAULT_SETTINGS } from "./state/settings";
 import { useTheme } from "./state/theme";
 import { useToasts } from "./state/toasts";
-import type { ModelInfo, Settings } from "./types";
+import type { Conversation, ModelInfo, Settings } from "./types";
 
 const storage = createStorage();
 
+// Collapse empty "New chat" conversations so a single auto-created one survives.
+// Without this, React 18 StrictMode's effect double-fire on first mount left two
+// identical "New chat" entries with createdAt within milliseconds.
+function dedupeEmpty(convs: Conversation[]): Conversation[] {
+  const empties = convs.filter((c) => c.messages.length === 0);
+  if (empties.length <= 1) return convs;
+  const keep = empties.reduce((a, b) => (b.updatedAt > a.updatedAt ? b : a));
+  const dropIds = new Set(empties.filter((c) => c.id !== keep.id).map((c) => c.id));
+  return convs.filter((c) => !dropIds.has(c.id));
+}
+
 function loadInitial(): ConversationsState {
-  const convs = storage.loadConversations();
+  let convs = dedupeEmpty(storage.loadConversations());
+  if (convs.length === 0) {
+    convs = [newConversation(null)];
+  }
   const active = storage.loadActive();
   return {
     conversations: convs,
@@ -72,13 +87,6 @@ export default function App() {
   }, [connection, pushToast]);
 
   const active = activeConversation(state);
-
-  // On first run, auto-create a conversation so the UI has something to show.
-  useEffect(() => {
-    if (state.conversations.length === 0) {
-      dispatch({ type: "create", model: null });
-    }
-  }, [state.conversations.length]);
 
   // Default a newly-created conversation's model to the first available model.
   useEffect(() => {

@@ -8,17 +8,20 @@ Routes:
 All other /v1/* paths are proxied transparently.
 
 Environment variables:
-  LOOM_BIND      — bind host (default: 127.0.0.1)
-  LOOM_PORT      — bind port (default: 8080)
-  LOOM_VMLX_URL  — vMLX backend base URL (default: http://127.0.0.1:8000)
-  LOOM_LOG_LEVEL — log level (default: info)
+  LOOM_BIND            — bind host (default: 127.0.0.1)
+  LOOM_PORT            — bind port (default: 8080)
+  LOOM_VMLX_URL        — vMLX backend base URL (default: http://127.0.0.1:8000)
+  LOOM_LOG_LEVEL       — log level (default: info)
+  LOOM_INJECT_CONTEXT  — inject date/capability preamble into chat requests (default: true)
 """
 
 from __future__ import annotations
 
 import contextlib
+import json
 import logging
 from collections.abc import AsyncIterator
+from datetime import date
 
 import httpx
 from fastapi import FastAPI, Request
@@ -96,6 +99,59 @@ def create_app(
     return app
 
 
+# ─── Context injection ────────────────────────────────────────────────────────
+
+# Tells the model what it does and does not have access to in this deployment.
+# Updated to the current date at request time so the model never claims to be
+# in its training-cutoff year.
+_CONTEXT_TEMPLATE = (
+    "The current date is {today}. You are a locally hosted assistant running "
+    "on the user's own hardware via the Loom platform.\n\n"
+    "You do not have built-in internet access, web search, or tools for fetching "
+    "live data in this deployment. If the user asks about current events, prices, "
+    "schedules, weather, news, or anything time-sensitive beyond your training data, "
+    "do not guess. Say plainly that you cannot fetch live information from this "
+    "deployment, and ask the user to paste the relevant text, URL contents, or data "
+    "so you can reason over it."
+)
+
+
+def _build_context_preamble(today: date | None = None) -> str:
+    return _CONTEXT_TEMPLATE.format(today=(today or date.today()).isoformat())
+
+
+def _inject_chat_context(body: bytes, *, today: date | None = None) -> bytes:
+    """Prepend a date/capability preamble to a chat-completions request body.
+
+    On any parse failure the body is returned unchanged — we never want context
+    injection to break an otherwise valid proxy call.
+    """
+    try:
+        payload = json.loads(body)
+    except (json.JSONDecodeError, ValueError):
+        return body
+
+    if not isinstance(payload, dict):
+        return body
+    messages = payload.get("messages")
+    if not isinstance(messages, list):
+        return body
+
+    preamble = _build_context_preamble(today)
+
+    if messages and isinstance(messages[0], dict) and messages[0].get("role") == "system":
+        existing = messages[0].get("content")
+        if isinstance(existing, str) and existing.strip():
+            messages[0]["content"] = f"{preamble}\n\n{existing}"
+        else:
+            messages[0]["content"] = preamble
+    else:
+        messages.insert(0, {"role": "system", "content": preamble})
+
+    payload["messages"] = messages
+    return json.dumps(payload).encode("utf-8")
+
+
 # ─── Proxy helper ─────────────────────────────────────────────────────────────
 
 
@@ -106,7 +162,15 @@ async def _proxy(
 ) -> StreamingResponse | JSONResponse:
     body = await request.body()
 
+    if (
+        request.method == "POST"
+        and path == "/v1/chat/completions"
+        and cfg.inject_context()
+    ):
+        body = _inject_chat_context(body)
+
     # Forward headers, minus hop-by-hop headers that httpx should not relay.
+    # Content-Length is dropped so httpx recomputes it after any body rewrite.
     headers = {
         k: v
         for k, v in request.headers.items()

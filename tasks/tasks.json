@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-04-22T02:30:00Z",
+  "updated_at": "2026-05-15T17:50:00Z",
   "tasks": [
     {
       "id": "loom-002",
@@ -238,6 +238,143 @@
       "created_at": "2026-04-20T00:00:00Z",
       "updated_at": "2026-04-21T03:00:00Z",
       "notes": "loom/gateway installable Python package (src/ layout). FastAPI app with /health, CORS middleware, JSON structured logging. Async httpx proxy for all /v1/* routes (streaming SSE pass-through + non-streaming). Config via LOOM_BIND (default 127.0.0.1), LOOM_PORT (8080), LOOM_VMLX_URL (http://127.0.0.1:8000), LOOM_LOG_LEVEL. 11 unit tests with respx-mocked backend, all passing. loom-gateway CLI entrypoint. session-verify updated to cover gateway."
+    },
+    {
+      "id": "loom-003",
+      "scope": "loom",
+      "phase": 1,
+      "title": "Gateway-side date/capability preamble for chat requests",
+      "status": "done",
+      "priority": "P1",
+      "depends_on": [
+        "loom-001"
+      ],
+      "spec": "When proxying POST /v1/chat/completions, the gateway injects a system-message preamble that (a) states today's date so the model never claims to be in its training-cutoff year and (b) tells the model it has no built-in internet/tools in this deployment and should ask the user for time-sensitive data instead of guessing. Existing system messages are augmented (preamble prepended), not replaced. Non-chat paths (GET /v1/models, etc.) are untouched. Behavior is opt-out via LOOM_INJECT_CONTEXT=false for transparent passthrough or for clients that already manage their own preamble. Pure stopgap for the gap that loom-004/005 will close properly.",
+      "acceptance_criteria": [
+        "POST /v1/chat/completions with no system message gets a system message prepended containing today's date in ISO format",
+        "Existing system messages are preserved and appended after the preamble, not overwritten",
+        "GET /v1/models and other non-chat paths pass through unmodified",
+        "LOOM_INJECT_CONTEXT=false disables injection (transparent passthrough)",
+        "Malformed JSON bodies pass through unchanged (never break the proxy)",
+        "Unit tests cover all branches; live test confirms model answers current year correctly"
+      ],
+      "created_at": "2026-05-15T15:45:00Z",
+      "updated_at": "2026-05-15T15:45:00Z",
+      "notes": "Shipped 2026-05-15. Touches loom/gateway/src/loom/gateway/main.py (_inject_chat_context, _build_context_preamble), config.py (inject_context env reader), tests/test_gateway_unit.py (+17 tests). 28/28 unit tests pass; live curl to Qwen-3.6 35B mxfp8 returns '2026' for 'what year is it'. Date is recomputed per-request via date.today() so the model stays correct across day boundaries."
+    },
+    {
+      "id": "loom-004",
+      "scope": "loom",
+      "phase": 1,
+      "title": "MCP host plumbing in gateway (no tools yet)",
+      "status": "todo",
+      "priority": "P0",
+      "depends_on": [
+        "loom-003"
+      ],
+      "spec": "Add a Model Context Protocol (MCP) host to loom-gateway so future tool capabilities (web search, URL fetch, customer APIs, filesystem, etc.) all plug in through a single uniform protocol instead of becoming ad-hoc gateway code. Scope: connect to one or more MCP servers configured via LOOM_MCP_SERVERS (stdio or SSE transport), discover their tool catalogs at startup, expose the merged catalog to the model via OpenAI-style `tools` parameter on /v1/chat/completions, execute tool calls returned by the model against the right MCP server, and feed results back into the conversation until the model emits a final assistant message. Streaming SSE must continue to work end-to-end (tool calls and tool results stream as chat-completion chunks). Out of scope: shipping any specific tools (that's loom-005); auth on tool calls; per-conversation tool allowlisting (later).",
+      "acceptance_criteria": [
+        "Gateway can connect to N configured MCP servers at startup and aggregate their tool catalogs",
+        "POST /v1/chat/completions with model that supports tool_use returns a response when the model decides not to call a tool (no behavior change vs today)",
+        "When the model emits a tool_call, the gateway executes it via the right MCP server and continues the loop until a final assistant message",
+        "SSE streaming works through the tool-call loop (chunks for assistant text, tool_call, tool_result)",
+        "LOOM_MCP_SERVERS empty/unset \u2192 zero tools advertised, gateway behaves as a pure proxy (back-compat)",
+        "Unit tests with a fake stdio MCP server (echoes a known tool); integration test with a real MCP server (e.g. mcp-server-time) confirming end-to-end loop"
+      ],
+      "created_at": "2026-05-15T15:45:00Z",
+      "updated_at": "2026-05-15T15:45:00Z",
+      "notes": null
+    },
+    {
+      "id": "loom-005",
+      "scope": "loom",
+      "phase": 1,
+      "title": "web_search and fetch_url tools as MCP servers",
+      "status": "todo",
+      "priority": "P0",
+      "depends_on": [
+        "loom-004"
+      ],
+      "spec": "Ship two first-party MCP servers under loom/mcp/ that the gateway can host via loom-004's plumbing: (1) web_search backed by a configurable provider (Brave/Tavily/DuckDuckGo HTML), returning top-N {title, url, snippet}; (2) fetch_url that retrieves a URL and returns text content (HTML \u2192 readable text via trafilatura or similar), with size cap and timeout. Both run as standalone processes; API keys come from macOS Keychain via the existing pattern, never env files. Out of scope: caching layer (later), per-tool rate limiting beyond a simple in-process cap.",
+      "acceptance_criteria": [
+        "loom/mcp/web_search/ and loom/mcp/fetch_url/ are installable Python packages exposing MCP servers",
+        "web_search returns structured results from at least one configured provider (Brave default if BRAVE_API_KEY set, DuckDuckGo HTML fallback otherwise)",
+        "fetch_url returns readable text with a 1 MB cap and 10 s default timeout; respects robots.txt for cooperative crawlers (opt-out via flag)",
+        "End-to-end through gateway: chat asking 'what's the weather in Tokyo today' triggers a web_search call and the model produces a grounded answer",
+        "Keychain integration for API keys (never plaintext); fallback message if no provider is configured",
+        "Unit tests for each tool; integration test with gateway tool-loop"
+      ],
+      "created_at": "2026-05-15T15:45:00Z",
+      "updated_at": "2026-05-15T15:45:00Z",
+      "notes": "Closes the gap that loom-003 papers over. After this lands, LOOM_INJECT_CONTEXT can be revisited (preamble could mention 'you have web_search and fetch_url available' instead of 'you have nothing')."
+    },
+    {
+      "id": "loom-006",
+      "scope": "loom",
+      "phase": 1,
+      "title": "Visual polish pass \u2014 Claude-like typography, spacing, message layout",
+      "status": "todo",
+      "priority": "P1",
+      "depends_on": [
+        "loom-002"
+      ],
+      "spec": "Bring the web UI's look and feel close to Claude.ai using open-source equivalents (no Anthropic-licensed fonts). Switch UI typography to Inter (or system-ui) and message-body typography to a humanist serif (e.g. Source Serif 4, Crimson Pro) loaded locally from /fonts. Adopt an 8px spacing rhythm. Constrain the message column to ~720px max-width with generous side padding. Remove bubble around assistant messages (flat with subtle dividers); keep a soft surface for user messages right-aligned. Add hover/focus states to sidebar items, a loading shimmer on the currently-streaming assistant message, a refined empty state with 3\u20134 suggested prompt chips, and a collapsible sidebar that auto-hides under 768 px. No new features \u2014 visual only.",
+      "acceptance_criteria": [
+        "Fonts ship in loom/web/public/fonts and are referenced via @font-face (no Google Fonts CDN, no Anthropic-licensed fonts)",
+        "Message column max-width \u2264 760 px with consistent left/right padding at all viewport sizes",
+        "Assistant messages render without a surrounding bubble; user messages have a subtle surface",
+        "Sidebar collapses below 768 px viewport with a hamburger toggle",
+        "Loading shimmer visible on the streaming assistant message until first token arrives",
+        "tsc, eslint, vitest all green; no regressions to existing 24 web tests"
+      ],
+      "created_at": "2026-05-15T17:50:00Z",
+      "updated_at": "2026-05-15T17:50:00Z",
+      "notes": null
+    },
+    {
+      "id": "loom-007",
+      "scope": "loom",
+      "phase": 1,
+      "title": "Artifacts pane \u2014 right-side preview for code, HTML, SVG, Markdown",
+      "status": "todo",
+      "priority": "P1",
+      "depends_on": [
+        "loom-006"
+      ],
+      "spec": "Add a right-side preview pane that activates when the model emits an artifact (a code block tagged with a sentinel, e.g. ```html artifact=\"page.html\"```, or via a tool call to a future `create_artifact` MCP tool). The pane splits the chat 50/50 with a draggable divider; collapses by default. Each artifact gets a chevron-paginated history; latest auto-focused while streaming. Renderers: HTML in sandboxed iframe (no network, no top-frame access), SVG inline, Markdown via existing renderer, code with syntax highlighting + copy. No execution of arbitrary JS in the chat tab (sandbox attribute only). Out of scope: editing artifacts inline, running Python (Pyodide), file-typed artifacts.",
+      "acceptance_criteria": [
+        "An assistant message containing a fenced block with ```html artifact=\"name.html\"``` opens the artifacts pane and renders sandboxed",
+        "Pane is closable, resizable, and remembers width per session",
+        "Multiple artifacts in one conversation are navigable via prev/next chevrons",
+        "iframe carries sandbox=\"allow-same-origin\" only; no allow-scripts in the default sandbox without explicit user opt-in",
+        "Vitest unit tests for the artifact-parser and the pane reducer; manual UI smoke covers HTML/SVG/Markdown",
+        "Streaming partial artifacts render progressively (no flicker between tokens)"
+      ],
+      "created_at": "2026-05-15T17:50:00Z",
+      "updated_at": "2026-05-15T17:50:00Z",
+      "notes": null
+    },
+    {
+      "id": "loom-008",
+      "scope": "loom",
+      "phase": 1,
+      "title": "File uploads in composer (PDF, image, txt/md/csv)",
+      "status": "blocked",
+      "priority": "P1",
+      "depends_on": [
+        "loom-002"
+      ],
+      "spec": "Add drag-and-drop and click-to-attach in the composer. Supported types: PDF (extract text via pdfjs-dist), images (PNG/JPEG/WebP, base64-embedded as multimodal user-message parts), plain text/markdown/CSV (inlined as text). Attachments render as removable chips above the textarea. The web client sends OpenAI-compatible multipart messages (content as array of text+image_url parts). PDF text extraction runs client-side; size cap 10 MB per file, 5 files per turn. Gateway proxies the multimodal payload unchanged to vMLX. Out of scope: server-side OCR, audio/video, file-typed artifacts.",
+      "acceptance_criteria": [
+        "Drop or attach a PDF \u2192 chip appears; sending includes extracted text in the user message",
+        "Drop or attach an image \u2192 chip appears with thumbnail; sending uses content[].image_url with a base64 data URL",
+        "Plain text/markdown/CSV inlined verbatim under a header comment",
+        "Size and count caps enforced with a toast on violation",
+        "Vitest tests for the parser/formatter; manual smoke through gateway"
+      ],
+      "created_at": "2026-05-15T17:50:00Z",
+      "updated_at": "2026-05-15T17:50:00Z",
+      "notes": "BLOCKED on vMLX supporting a multimodal model (image content parts). Filed as P1 so vmlx side can be planned in parallel. Text-only attachment subset (PDF/txt/md/csv) could ship first if we split the task."
     }
   ]
 }

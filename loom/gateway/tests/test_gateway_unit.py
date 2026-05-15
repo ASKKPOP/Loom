@@ -260,3 +260,167 @@ def test_json_log_format() -> None:
     assert parsed["level"] == "INFO"
     assert parsed["msg"] == "hello world"
     assert "ts" in parsed
+
+
+# ─── Context injection ────────────────────────────────────────────────────────
+
+
+def test_inject_context_prepends_when_no_system_message() -> None:
+    from datetime import date
+
+    from loom.gateway.main import _inject_chat_context
+
+    body = json.dumps({"model": "x", "messages": [{"role": "user", "content": "hi"}]}).encode()
+    out = json.loads(_inject_chat_context(body, today=date(2026, 5, 15)))
+    assert len(out["messages"]) == 2
+    assert out["messages"][0]["role"] == "system"
+    assert "2026-05-15" in out["messages"][0]["content"]
+    assert "do not have built-in internet access" in out["messages"][0]["content"]
+    assert out["messages"][1] == {"role": "user", "content": "hi"}
+
+
+def test_inject_context_augments_existing_system_message() -> None:
+    from datetime import date
+
+    from loom.gateway.main import _inject_chat_context
+
+    body = json.dumps(
+        {
+            "messages": [
+                {"role": "system", "content": "You are Yoda."},
+                {"role": "user", "content": "hi"},
+            ]
+        }
+    ).encode()
+    out = json.loads(_inject_chat_context(body, today=date(2026, 5, 15)))
+    assert len(out["messages"]) == 2
+    sys_content = out["messages"][0]["content"]
+    assert sys_content.startswith("The current date is 2026-05-15")
+    assert sys_content.endswith("You are Yoda.")
+
+
+def test_inject_context_passthrough_on_malformed_json() -> None:
+    from loom.gateway.main import _inject_chat_context
+
+    garbage = b"\xff\xfe not json"
+    assert _inject_chat_context(garbage) == garbage
+
+
+def test_inject_context_passthrough_when_no_messages_key() -> None:
+    from loom.gateway.main import _inject_chat_context
+
+    body = json.dumps({"model": "x"}).encode()
+    assert _inject_chat_context(body) == body
+
+
+def test_proxy_chat_completions_injects_system_message(
+    client: TestClient, mock_client: httpx.AsyncClient
+) -> None:
+    captured: dict[str, object] = {}
+
+    with respx.mock(base_url=FAKE_BACKEND) as router:
+
+        def _record(request: httpx.Request) -> httpx.Response:
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(
+                200,
+                json={"id": "ok", "choices": [{"message": {"role": "assistant", "content": "hi"}}]},
+            )
+
+        router.post("/v1/chat/completions").mock(side_effect=_record)
+        mock_client._transport = httpx.MockTransport(router.handler)  # type: ignore[assignment]
+
+        resp = client.post(
+            "/v1/chat/completions",
+            json={"model": "x", "messages": [{"role": "user", "content": "hi"}]},
+        )
+
+    assert resp.status_code == 200
+    body = captured["body"]
+    assert isinstance(body, dict)
+    msgs = body["messages"]
+    assert isinstance(msgs, list)
+    assert msgs[0]["role"] == "system"
+    assert "current date" in msgs[0]["content"]
+    assert msgs[1] == {"role": "user", "content": "hi"}
+
+
+def test_proxy_non_chat_paths_are_not_modified(
+    client: TestClient, mock_client: httpx.AsyncClient
+) -> None:
+    captured: dict[str, object] = {}
+
+    with respx.mock(base_url=FAKE_BACKEND) as router:
+
+        def _record(request: httpx.Request) -> httpx.Response:
+            captured["body"] = request.content
+            return httpx.Response(200, json={"object": "list", "data": []})
+
+        router.get("/v1/models").mock(side_effect=_record)
+        mock_client._transport = httpx.MockTransport(router.handler)  # type: ignore[assignment]
+
+        resp = client.get("/v1/models")
+
+    assert resp.status_code == 200
+    assert captured["body"] == b""
+
+
+def test_inject_context_can_be_disabled_via_env(
+    monkeypatch: pytest.MonkeyPatch,
+    mock_client: httpx.AsyncClient,
+) -> None:
+    monkeypatch.setenv("LOOM_INJECT_CONTEXT", "false")
+    app = create_app(backend_url=FAKE_BACKEND, http_client=mock_client)
+
+    captured: dict[str, object] = {}
+
+    with (
+        respx.mock(base_url=FAKE_BACKEND) as router,
+        TestClient(app) as c,
+    ):
+
+        def _record(request: httpx.Request) -> httpx.Response:
+            captured["body"] = json.loads(request.content)
+            return httpx.Response(200, json={"id": "ok", "choices": []})
+
+        router.post("/v1/chat/completions").mock(side_effect=_record)
+        mock_client._transport = httpx.MockTransport(router.handler)  # type: ignore[assignment]
+
+        c.post(
+            "/v1/chat/completions",
+            json={"model": "x", "messages": [{"role": "user", "content": "hi"}]},
+        )
+
+    body = captured["body"]
+    assert isinstance(body, dict)
+    assert body["messages"] == [{"role": "user", "content": "hi"}]
+
+
+def test_inject_context_config_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("LOOM_INJECT_CONTEXT", raising=False)
+    from loom.gateway import config as cfg
+
+    assert cfg.inject_context() is True
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("false", False),
+        ("FALSE", False),
+        ("0", False),
+        ("no", False),
+        ("off", False),
+        ("true", True),
+        ("1", True),
+        ("yes", True),
+        ("", True),
+    ],
+)
+def test_inject_context_config_parses_truthy(
+    monkeypatch: pytest.MonkeyPatch, value: str, expected: bool
+) -> None:
+    monkeypatch.setenv("LOOM_INJECT_CONTEXT", value)
+    from loom.gateway import config as cfg
+
+    assert cfg.inject_context() is expected
